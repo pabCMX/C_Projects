@@ -1,0 +1,10 @@
+CompileFlags:
+  Add:
+    - -target
+    - x86_64-w64-windows-gnu
+    - -I
+    - C:/msys64/ucrt64/include
+    - -I
+    - C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include
+    - -I
+    - C:/msys64/ucrt64/x86_64-w64-mingw32/include
