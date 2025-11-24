@@ -1,7 +1,7 @@
-//Ex2 without using math, instead input splits.
+// Ex2 without using math, instead input splits.
 #include <stdio.h>
 
-int main (void){
+int main(void) {
   int hundreds, tensDigit, onesDigit;
 
   printf("Enter a three-digit number: ");

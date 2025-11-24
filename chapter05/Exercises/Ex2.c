@@ -5,7 +5,6 @@
 int main(void) {
   int userHours, userMinutes, convertedHours;
 
-
   printf("Enter a 24-hour time (HH:MM): ");
   scanf("%2d:%2d", &userHours, &userMinutes);
 
@@ -22,5 +21,4 @@ int main(void) {
     convertedHours = 12;
     printf("Equivalent 12-hour time: %.2d:%.2d AM", convertedHours, userMinutes);
   }
-
 }

@@ -1,7 +1,7 @@
-//Enter a two digit number and return the number reversed.
+// Enter a two digit number and return the number reversed.
 #include <stdio.h>
 
-int main (void){
+int main(void) {
   int input, tensDigit, onesDigit;
 
   printf("Enter a two-digit number: ");

@@ -1,7 +1,6 @@
 #include <stdio.h>
 
-int main(void)
-{
+int main(void) {
   int gs1Prefix, groupId, publisherCode, itemNum, checksum;
 
   printf("Enter ISBN (with dashes): ");

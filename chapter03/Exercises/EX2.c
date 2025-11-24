@@ -1,8 +1,7 @@
 #include <stdio.h>
 
-int main(void)
-{
-  int itemNum, purchaseMonth, purchaseDay, purchaseYear;
+int main(void) {
+  int   itemNum, purchaseMonth, purchaseDay, purchaseYear;
   float itemPrice;
 
   printf("Enter item number: ");
@@ -17,5 +16,4 @@ int main(void)
   printf("%d\t\t$%6.2f\t\t%d/%d/%d", itemNum, itemPrice, purchaseMonth, purchaseDay, purchaseYear);
 
   return 0;
-
 }

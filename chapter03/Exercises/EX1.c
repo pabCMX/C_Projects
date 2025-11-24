@@ -1,7 +1,6 @@
 #include <stdio.h>
 
-int main(void)
-{
+int main(void) {
   int year, month, day;
 
   printf("Enter a date (mm/dd/yyyy): ");
