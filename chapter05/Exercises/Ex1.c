@@ -21,4 +21,6 @@ int main(void) {
   }
 
   printf("The number %d has %d digits.", userNum, count);
+
+  return 0;
 }

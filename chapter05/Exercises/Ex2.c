@@ -21,4 +21,6 @@ int main(void) {
     convertedHours = 12;
     printf("Equivalent 12-hour time: %.2d:%.2d AM", convertedHours, userMinutes);
   }
+
+  return 0;
 }
