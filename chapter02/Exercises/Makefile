@@ -13,7 +13,7 @@ TARGETS  = $(patsubst %.c,$(BUILDDIR)/%.exe,$(SOURCES))
 ifeq ($(OS),Windows_NT)
     MKDIR_P = powershell -NoLogo -NoProfile -Command "New-Item -ItemType Directory -Path '$(BUILDDIR)' -Force | Out-Null"
     RM_EXE  = powershell -NoLogo -NoProfile -Command "if (Test-Path '$(BUILDDIR)') { Remove-Item '$(BUILDDIR)/*.exe' -ErrorAction SilentlyContinue }"
-    NOOP    = @echo.>nul
+    NOOP    = @powershell -NoLogo -NoProfile -Command ""
 else
     MKDIR_P = mkdir -p $(BUILDDIR)
     RM_EXE  = rm -f $(TARGETS)

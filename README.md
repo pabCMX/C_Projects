@@ -128,7 +128,7 @@ ifeq ($(OS),Windows_NT)
     # Commands for Windows (calls PowerShell for complex operations)
     MKDIR_P = powershell -NoLogo -NoProfile -Command "New-Item -ItemType Directory -Path '$(BUILDDIR)' -Force | Out-Null"
     RM_EXE  = powershell -NoLogo -NoProfile -Command "if (Test-Path '$(BUILDDIR)') { Remove-Item '$(BUILDDIR)/*.exe' -ErrorAction SilentlyContinue }"
-    NOOP    = @echo.>nul
+    NOOP    = @powershell -NoLogo -NoProfile -Command ""
 else
     # Commands for POSIX shells (Linux, macOS, etc.)
     MKDIR_P = mkdir -p $(BUILDDIR)
@@ -155,7 +155,7 @@ clean:
 | Operation | POSIX (Bash) | Windows (cmd/PowerShell) |
 |-----------|--------------|--------------------------|
 | Create directory | `mkdir -p $(BUILDDIR)` | `powershell ... New-Item ...` |
-| No-op command | `@:` | `@echo.>nul` |
+| No-op command | `@:` | `@powershell ... ""` |
 | Delete files | `rm -f $(TARGETS)` | `powershell ... Remove-Item ...` |
 
 ---
