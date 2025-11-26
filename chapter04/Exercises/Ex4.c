@@ -13,7 +13,8 @@ int main(void) {
   thousand  = (input /= 8) % 8;
   tenThou   = (input /= 8) % 8;
 
-  printf("In ocat, your number is: %d%d%d%d%d", tenThou, thousand, hundred, tensDigit, onesDigit);
+  printf("In octal, your number is: %d%d%d%d%d\n", tenThou, thousand, hundred, tensDigit, onesDigit);
+  // We could've just used printf("Octal: %o", input) to get the conversion automatically...
 
   return 0;
 }

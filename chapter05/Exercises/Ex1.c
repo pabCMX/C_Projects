@@ -1,4 +1,4 @@
-// Calculates digits in a given number.
+// Calculates digits in a given number. We can assume the number is no bigger than 4 digits.
 #include <stdio.h>
 
 int main(void) {
@@ -7,6 +7,11 @@ int main(void) {
 
   printf("Enter a number: ");
   scanf("%d", &userNum);
+
+  // To make sure negatives don't break it, we'll throw the sign away
+  if (userNum < 0) {
+    userNum = -userNum;
+  }
 
   if (userNum <= 9) {
     count = 1;
@@ -20,7 +25,7 @@ int main(void) {
     count = 5;
   }
 
-  printf("The number %d has %d digits.", userNum, count);
+  printf("The number %d has %d digits.\n", userNum, count);
 
   return 0;
 }

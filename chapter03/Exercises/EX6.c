@@ -1,3 +1,4 @@
+// Refactor addFrac.c to take a single user input
 #include <stdio.h>
 
 int main(void) {

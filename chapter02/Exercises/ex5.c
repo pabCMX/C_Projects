@@ -1,3 +1,4 @@
+// Compute a 5th degree polynomial with user input x
 #include <stdio.h>
 
 int main(void) {
@@ -13,7 +14,7 @@ int main(void) {
 
   total =
       (3 * xFifthDegree) + (2 * xFourthDegree) - (5 * xThirdDegree) - xSecondDegree + (7 * x) - 6;
-  printf("Value is: %f", total);
+  printf("Value is: %f\n", total);
 
   return 0;
 }

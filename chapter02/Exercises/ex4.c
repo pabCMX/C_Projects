@@ -1,3 +1,4 @@
+// Compute total with tax from user input subtotal
 #include <stdio.h>
 
 int main(void) {
@@ -9,7 +10,7 @@ int main(void) {
   tax   = subtotal * taxPercent;
   total = subtotal + tax;
 
-  printf("With tax added: $%.2f", total);
+  printf("With tax added: $%.2f\n", total);
 
   return 0;
 }

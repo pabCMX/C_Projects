@@ -1,3 +1,4 @@
+// Compute dollar change for user input total.
 #include <stdio.h>
 
 int main(void) {

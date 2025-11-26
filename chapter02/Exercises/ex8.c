@@ -1,3 +1,4 @@
+// Compute first 3 monthly payments with interest based on user loan data.
 #include <stdio.h>
 
 int main(void) {
@@ -10,15 +11,15 @@ int main(void) {
   printf("Enter payment: $");
   scanf("%f", &payment);
 
-  balance = (principal * (1 + (interest / 12.0))) - payment;
+  balance = (principal * (1 + (interest / 12.0f))) - payment;
   printf("Balance after first payment: $%.2f\n", balance);
 
   principal = balance;
-  balance   = (principal * (1 + (interest / 12.0))) - payment;
+  balance   = (principal * (1 + (interest / 12.0f))) - payment;
   printf("Balance after second payment: $%.2f\n", balance);
 
   principal = balance;
-  balance   = (principal * (1 + (interest / 12.0))) - payment;
+  balance   = (principal * (1 + (interest / 12.0f))) - payment;
   printf("Balance after third payment: $%.2f\n", balance);
 
   return 0;

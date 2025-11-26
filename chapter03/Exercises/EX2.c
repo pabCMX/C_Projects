@@ -1,3 +1,4 @@
+// Print formatted 'receipt' from user purchase info.
 #include <stdio.h>
 
 int main(void) {
@@ -13,7 +14,8 @@ int main(void) {
 
   printf("------------------------------------\n");
   printf("Item\t\tUnit\t\tPurchase\n\t\tPrice\t\tDate\n");
-  printf("%d\t\t$%6.2f\t\t%d/%d/%d", itemNum, itemPrice, purchaseMonth, purchaseDay, purchaseYear);
+  printf("%d\t\t$%6.2f\t\t%d/%d/%d\n", itemNum, itemPrice, purchaseMonth, purchaseDay,
+         purchaseYear);
 
   return 0;
 }

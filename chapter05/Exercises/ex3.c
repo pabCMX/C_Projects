@@ -25,15 +25,16 @@ int main(void) {
   else
     commission = 255.00f + .0009f * tradeValue;
 
-  if (commission < 39.00f)
+  if (commission < 39.00f) {
     commission = 39.00f;
+  }
 
   if (shareCount < 2000) {
     rivalCommission = 33.00f + 0.03f * shareCount;
   } else {
     rivalCommission = 33.00f + 0.02f * shareCount;
   }
-  printf("Our Commission: $%.2f\nTheir Commission: $%.2f", commission, rivalCommission);
+  printf("Our Commission: $%.2f\nTheir Commission: $%.2f\n", commission, rivalCommission);
 
   return 0;
 }

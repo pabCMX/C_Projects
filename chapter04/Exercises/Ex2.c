@@ -8,10 +8,10 @@ int main(void) {
   scanf("%d", &input);
 
   hundreds  = input / 100;
-  onesDigit = (input % 100) % 10;
+  onesDigit = input % 10;
   tensDigit = (input % 100) / 10;
 
-  printf("The reversal is: %d%d%d", onesDigit, tensDigit, hundreds);
+  printf("The reversal is: %d%d%d\n", onesDigit, tensDigit, hundreds);
 
   return 0;
 }

@@ -1,3 +1,4 @@
+// Refactor ex5.c to use Horner's Rule for polynomials.
 #include <stdio.h>
 
 int main(void) {
@@ -7,7 +8,7 @@ int main(void) {
   scanf("%f", &x);
 
   total = ((((3 * x + 2) * x - 5) * x - 1) * x + 7) * x - 6;
-  printf("Value is: %f", total);
+  printf("Value is: %f\n", total);
 
   return 0;
 }

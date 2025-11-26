@@ -7,7 +7,7 @@ int main(void) {
   printf("Enter a three-digit number: ");
   scanf("%1d%1d%1d", &hundreds, &tensDigit, &onesDigit);
 
-  printf("The reversal is: %d%d%d", onesDigit, tensDigit, hundreds);
+  printf("The reversal is: %d%d%d\n", onesDigit, tensDigit, hundreds);
 
   return 0;
 }

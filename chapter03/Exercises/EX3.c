@@ -1,3 +1,4 @@
+// Split user ISBN into component parts for display.
 #include <stdio.h>
 
 int main(void) {

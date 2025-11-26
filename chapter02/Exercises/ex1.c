@@ -1,3 +1,4 @@
+// Print a checkmark to terminal.
 #include <stdio.h>
 
 int main(void) {

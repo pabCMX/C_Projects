@@ -1,3 +1,4 @@
+// Refactor ex2.c to take user input for radius
 #include <stdio.h>
 
 int main(void) {
@@ -9,9 +10,9 @@ int main(void) {
   scanf("%f", &radius);
 
   radiusCubed = radius * radius * radius;
-  volume      = (4.0 / 3.0) * PI * radiusCubed;
+  volume      = (4.0f / 3.0f) * PI * radiusCubed;
 
-  printf("Radius(meters): %.2f, Volume(meters cubed): %.2f", radius, volume);
+  printf("Radius(meters): %.2f, Volume(meters cubed): %.2f\n", radius, volume);
 
   return 0;
 }

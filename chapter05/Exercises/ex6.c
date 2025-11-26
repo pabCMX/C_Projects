@@ -15,9 +15,9 @@ int main(void) {
   computedCheck = 9 - ((total - 1) % 10);
 
   if (computedCheck == checksum) {
-    printf("The UPC is valid.");
+    printf("The UPC is valid.\n");
   } else {
-    printf("The UPC is invalid. Checksum should be %d, got %d", total, checksum);
+    printf("The UPC is invalid. Checksum should be %d, got %d\n", computedCheck, checksum);
   }
 
   return 0;

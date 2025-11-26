@@ -10,7 +10,7 @@ int main(void) {
   onesDigit = input % 10;
   tensDigit = input / 10;
 
-  printf("The reversal is: %d%d", onesDigit, tensDigit);
+  printf("The reversal is: %d%d\n", onesDigit, tensDigit);
 
   return 0;
 }

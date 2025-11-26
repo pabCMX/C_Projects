@@ -1,3 +1,4 @@
+// Take user input numbers and compute magic square sums.
 #include <stdio.h>
 
 int main(void) {
@@ -10,6 +11,7 @@ int main(void) {
   scanf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d", &x, &y, &z, &a, &b, &c, &d, &e, &f, &g,
         &h, &i, &j, &k, &l, &m);
 
+  // Printing grid
   printf("\n%d\t%d\t%d\t%d\n", x, y, z, a);
   printf("%d\t%d\t%d\t%d\n", b, c, d, e);
   printf("%d\t%d\t%d\t%d\n", f, g, h, i);
@@ -28,7 +30,9 @@ int main(void) {
   forwardDiag  = a + d + g + j;
   backwardDiag = x + c + h + m;
 
-  printf("Row Sums:\t%d\t%d\t%d\t%d\n", firstCol, secondCol, thirdCol, fourthCol);
-  printf("Column Sums:\t%d\t%d\t%d\t%d\n", firstRow, secondRow, thirdRow, fourthRow);
+  printf("Row Sums:\t%d\t%d\t%d\t%d\n", firstRow, secondRow, thirdRow, fourthRow);
+  printf("Column Sums:\t%d\t%d\t%d\t%d\n", firstCol, secondCol, thirdCol, fourthCol);
   printf("Diagonal Sums:\t%d\t%d\n", backwardDiag, forwardDiag);
+
+  return 0;
 }

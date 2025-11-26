@@ -10,16 +10,16 @@ int main(void) {
 
   if (userHours >= 13) {
     convertedHours = userHours - 12;
-    printf("Equivalent 12-hour time: %.2d:%.2d PM", convertedHours, userMinutes);
+    printf("Equivalent 12-hour time: %.2d:%.2d PM\n", convertedHours, userMinutes);
   } else if (userHours == 12) {
     convertedHours = userHours;
-    printf("Equivalent 12-hour time: %.2d:%.2d PM", convertedHours, userMinutes);
+    printf("Equivalent 12-hour time: %.2d:%.2d PM\n", convertedHours, userMinutes);
   } else if (userHours > 0) {
     convertedHours = userHours;
-    printf("Equivalent 12-hour time: %.2d:%.2d AM", convertedHours, userMinutes);
+    printf("Equivalent 12-hour time: %.2d:%.2d AM\n", convertedHours, userMinutes);
   } else {
     convertedHours = 12;
-    printf("Equivalent 12-hour time: %.2d:%.2d AM", convertedHours, userMinutes);
+    printf("Equivalent 12-hour time: %.2d:%.2d AM\n", convertedHours, userMinutes);
   }
 
   return 0;
