@@ -507,12 +507,299 @@ int main(void) {
 
 ---
 
+## Exercise 9 – Date Comparison
+
+```c
+// Calculate the earlier date from two user dates.
+#include <stdio.h>
+
+int main(void) {
+  int year1, year2, month1, month2, day1, day2;
+
+  printf("Enter your first date (mm/dd/yyyy): ");
+  scanf("%2d / %2d / %4d", &month1, &day1, &year1);
+
+  printf("Enter your second date (mm/dd/yyyy): ");
+  scanf("%2d / %2d / %4d", &month2, &day2, &year2);
+
+  if (year1 > year2) {
+    printf("%.2d/%.2d/%.4d is earlier than %.2d/%.2d/%.4d\n", month2, day2, year2, month1, day1,
+           year1);
+  } else if (year1 != year2) {
+    printf("%.2d/%.2d/%.4d is earlier than %.2d/%.2d/%.4d\n", month1, day1, year1, month2, day2,
+           year2);
+  } else if (month1 > month2) {
+    printf("%.2d/%.2d/%.4d is earlier than %.2d/%.2d/%.4d\n", month2, day2, year2, month1, day1,
+           year1);
+  } else if (month1 != month2) {
+    printf("%.2d/%.2d/%.4d is earlier than %.2d/%.2d/%.4d\n", month1, day1, year1, month2, day2,
+           year2);
+  } else if (day1 > day2) {
+    printf("%.2d/%.2d/%.4d is earlier than %.2d/%.2d/%.4d\n", month2, day2, year2, month1, day1,
+           year1);
+  } else if (day1 != day2) {
+    printf("%.2d/%.2d/%.4d is earlier than %.2d/%.2d/%.4d\n", month1, day1, year1, month2, day2,
+           year2);
+  } else {
+    printf("%.2d/%.2d/%.4d and %.2d/%.2d/%.4d are the same day.\n", month2, day2, year2, month1,
+           day1, year1);
+  }
+
+  return 0;
+}
+```
+
+### Review
+
+**Strengths:**
+
+- **Correct hierarchical comparison logic** – compares year first, then month, then day
+- Good use of `%.2d` and `%.4d` for zero-padded date output
+- Handles the edge case when both dates are the same
+- **Clever use of `!=` in else-if branches** – after checking `year1 > year2` is false, `year1 != year2` means `year1 < year2`
+- Clean scanf pattern matching with `/` separators
+- Proper trailing newlines
+
+**Suggestions:**
+
+- The logic could be slightly more readable with explicit `<` comparisons:
+  ```c
+  } else if (year1 < year2) {
+  ```
+  But the current `!=` approach is mathematically equivalent and correct
+- Could extract the printf format string to avoid repetition
+
+**Grade: A** – Correct date comparison with elegant logic.
+
+---
+
+## Exercise 10 – Grade to Letter (Switch)
+
+```c
+// Convert numerical grade into letter grade with "switch"
+#include <stdio.h>
+
+int main(void) {
+  int input, tensDigit;
+
+  printf("Enter your numerical grade: ");
+  scanf("%d", &input);
+
+  if (input < 0) {
+    printf("Error: numerical grade greater than 100 or less than 0.\n");
+    return 1;
+  }
+
+  tensDigit = input / 10;
+
+  switch (tensDigit) {
+  case 10:
+  case 9:
+    printf("Letter grade: A\n");
+    break;
+  case 8:
+    printf("Letter grade: B\n");
+    break;
+  case 7:
+    printf("Letter grade: C\n");
+    break;
+  case 6:
+    printf("Letter grade: D\n");
+    break;
+  case 5:
+  case 4:
+  case 3:
+  case 2:
+  case 1:
+  case 0:
+    printf("Letter grade: F\n");
+    break;
+  default:
+    printf("Error: numerical grade greater than 100 or less than 0.\n");
+    return 1;
+  }
+
+  return 0;
+}
+```
+
+### Review
+
+**Strengths:**
+
+- **First use of `switch` statement!** Excellent application
+- **Clever use of case fallthrough** for grades 90-100 (both case 10 and 9 → A) and 0-59 (all → F)
+- Good error handling with early return for invalid input
+- Smart technique: `tensDigit = input / 10` converts grade ranges to single switch cases
+- Proper use of `break` statements to prevent unintended fallthrough
+- Returns non-zero (1) on error – good practice
+- Proper trailing newlines
+
+**Suggestions:**
+
+- The error message for `input < 0` says "greater than 100 or less than 0" but only the `< 0` case triggers it – consider a more specific message
+- Could handle grades like 100 more explicitly (currently works via case 10)
+
+**Grade: A** – Excellent first switch statement with smart design.
+
+---
+
+## Exercise 11 – Number to English Words
+
+```c
+// Return english number name for given two digit number.
+#include <stdio.h>
+
+int main(void) {
+  int tensDigit, onesDigit;
+
+  printf("Enter a two-digit number: ");
+  scanf("%1d%1d", &tensDigit, &onesDigit);
+
+  printf("You entered the number ");
+
+  if (tensDigit == 1) {
+    switch (onesDigit) {
+    case 9:
+      printf("nineteen");
+      break;
+    case 8:
+      printf("eighteen");
+      break;
+    case 7:
+      printf("seventeen");
+      break;
+    case 6:
+      printf("sixteen");
+      break;
+    case 5:
+      printf("fifteen");
+      break;
+    case 4:
+      printf("fourteen");
+      break;
+    case 3:
+      printf("thirteen");
+      break;
+    case 2:
+      printf("twelve");
+      break;
+    case 1:
+      printf("eleven");
+      break;
+    case 0:
+      printf("ten");
+      break;
+    default:
+      printf("Error: Invalid number.");
+      return 1;
+    }
+    return 0;
+  }
+
+  switch (tensDigit) {
+  case 9:
+    printf("ninety");
+    break;
+  case 8:
+    printf("eighty");
+    break;
+  case 7:
+    printf("seventy");
+    break;
+  case 6:
+    printf("sixty");
+    break;
+  case 5:
+    printf("fifty");
+    break;
+  case 4:
+    printf("forty");
+    break;
+  case 3:
+    printf("thirty");
+    break;
+  case 2:
+    printf("twenty");
+    break;
+  default:
+    printf("Error: Invalid number");
+    return 1;
+  }
+
+  switch (onesDigit) {
+  case 9:
+    printf("-nine");
+    break;
+  case 8:
+    printf("-eight");
+    break;
+  case 7:
+    printf("-seven");
+    break;
+  case 6:
+    printf("-six");
+    break;
+  case 5:
+    printf("-five");
+    break;
+  case 4:
+    printf("-four");
+    break;
+  case 3:
+    printf("-three");
+    break;
+  case 2:
+    printf("-two");
+    break;
+  case 1:
+    printf("-one");
+  case 0:
+    break;
+  default:
+    printf("Error: Invalid number");
+    return 1;
+  }
+
+  return 0;
+}
+```
+
+### Review
+
+**Strengths:**
+
+- **Impressive handling of English number irregularities!** The teens (10-19) are correctly special-cased
+- **Multiple switch statements** working together elegantly
+- Good use of `%1d%1d` scanf width specifiers to split digits
+- Correct hyphenation (e.g., "twenty-one", "thirty-five")
+- Early return after handling teens prevents falling through to regular tens logic
+- Handles "twenty", "thirty", etc. without hyphen when ones digit is 0
+
+**Suggestions:**
+
+- **Missing `break` before `case 0`** on line 107-108 – while functionally correct (case 0 does nothing), it's better style to include the break for case 1:
+  ```c
+  case 1:
+    printf("-one");
+    break;
+  case 0:
+    break;
+  ```
+- **Missing trailing newline** on output – the number name isn't followed by `\n`
+- Input like "00" or "01" would be rejected as invalid (tens digit 0 or 1 without being a teen) – this is reasonable behavior but could be documented
+
+**Grade: A-** – Impressive complexity handling, minor style issues.
+
+---
+
 # Summary
 
 ## Overall Assessment
 
 Outstanding work on Chapter 5, demonstrating mastery of:
 - Cascading if-else structures
+- **Switch statements with case fallthrough**
 - Proper boundary condition handling
 - Edge case consideration (negative numbers, midnight, etc.)
 - Algorithm design for complex problems
@@ -528,16 +815,20 @@ Outstanding work on Chapter 5, demonstrating mastery of:
 | 6 | A | UPC validation with clear errors |
 | 7 | A | Efficient tournament min/max |
 | 8 | A+ | Excellent flight finder algorithm |
+| 9 | A | Hierarchical date comparison |
+| 10 | A | Smart switch with case fallthrough |
+| 11 | A- | Complex number-to-words conversion |
 
 **Chapter Average: A**
 
 ## Key Strengths
 
-- Thorough edge case handling (negative numbers, boundary times)
-- Excellent algorithm design (tournament, midpoint)
+- Thorough edge case handling (negative numbers, boundary times, same dates)
+- Excellent algorithm design (tournament, midpoint, hierarchical comparison)
 - Good use of modern C23 features
 - Outstanding code documentation and comments
 - Consistent proper output formatting
+- **Strong switch statement usage** with intentional fallthrough
 
 ## Highlights
 
@@ -545,6 +836,8 @@ Outstanding work on Chapter 5, demonstrating mastery of:
 - **Exercise 3** – Creative use of C23 digit separators for readability
 - **Exercise 7** – Efficient tournament-style min/max algorithm
 - **Exercise 8** – Excellent documentation and midpoint algorithm design
+- **Exercise 10** – Clever use of integer division to map grades to switch cases
+- **Exercise 11** – Impressive handling of English number irregularities (teens)
 
-Keep up the excellent work! The code quality, problem-solving approach, and attention to edge cases shows strong understanding of C fundamentals and selection statements.
+Keep up the excellent work! The code quality, problem-solving approach, and attention to edge cases shows strong understanding of C fundamentals and selection statements. The switch statement exercises (10, 11) demonstrate good understanding of when to use switch vs. if-else and how to leverage case fallthrough effectively.
 

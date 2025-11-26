@@ -12,37 +12,37 @@ int main(void) {
   if (tensDigit == 1) {
     switch (onesDigit) {
     case 9:
-      printf("nineteen");
+      printf("nineteen\n");
       break;
     case 8:
-      printf("eighteen");
+      printf("eighteen\n");
       break;
     case 7:
-      printf("seventeen");
+      printf("seventeen\n");
       break;
     case 6:
-      printf("sixteen");
+      printf("sixteen\n");
       break;
     case 5:
-      printf("fifteen");
+      printf("fifteen\n");
       break;
     case 4:
-      printf("fourteen");
+      printf("fourteen\n");
       break;
     case 3:
-      printf("thirteen");
+      printf("thirteen\n");
       break;
     case 2:
-      printf("twelve");
+      printf("twelve\n");
       break;
     case 1:
-      printf("eleven");
+      printf("eleven\n");
       break;
     case 0:
-      printf("ten");
+      printf("ten\n");
       break;
     default:
-      printf("Error: Invalid number.");
+      printf("Error: Invalid number.\n");
       return 1;
     }
     return 0;
@@ -74,41 +74,42 @@ int main(void) {
     printf("twenty");
     break;
   default:
-    printf("Error: Invalid number");
+    printf("Error: Invalid number\n");
     return 1;
   }
 
   switch (onesDigit) {
   case 9:
-    printf("-nine");
+    printf("-nine\n");
     break;
   case 8:
-    printf("-eight");
+    printf("-eight\n");
     break;
   case 7:
-    printf("-seven");
+    printf("-seven\n");
     break;
   case 6:
-    printf("-six");
+    printf("-six\n");
     break;
   case 5:
-    printf("-five");
+    printf("-five\n");
     break;
   case 4:
-    printf("-four");
+    printf("-four\n");
     break;
   case 3:
-    printf("-three");
+    printf("-three\n");
     break;
   case 2:
-    printf("-two");
+    printf("-two\n");
     break;
   case 1:
-    printf("-one");
+    printf("-one\n");
+    break;
   case 0:
     break;
   default:
-    printf("Error: Invalid number");
+    printf("Error: Invalid number\n");
     return 1;
   }
 
