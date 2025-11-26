@@ -2,17 +2,41 @@
 CC     = gcc
 CFLAGS = -std=c23 -Wall -Wextra -pedantic -g
 
+# Where to put executables
+BUILDDIR = build
+
 # All .c files in this directory
 SOURCES  = $(wildcard *.c)
-TARGETS  = $(SOURCES:.c=.exe)
+TARGETS  = $(patsubst %.c,$(BUILDDIR)/%.exe,$(SOURCES))
+
+# Detect platform via OS environment variable (Windows sets OS=Windows_NT)
+ifeq ($(OS),Windows_NT)
+    MKDIR_P = powershell -NoLogo -NoProfile -Command "New-Item -ItemType Directory -Path '$(BUILDDIR)' -Force | Out-Null"
+    RM_EXE  = powershell -NoLogo -NoProfile -Command "if (Test-Path '$(BUILDDIR)') { Remove-Item '$(BUILDDIR)/*.exe' -ErrorAction SilentlyContinue }"
+    NOOP    = @echo.>nul
+else
+    MKDIR_P = mkdir -p $(BUILDDIR)
+    RM_EXE  = rm -f $(TARGETS)
+    NOOP    = @:
+endif
+
+.PHONY: all clean dirs
 
 # Default target: build everything
-all: $(TARGETS)
+all: dirs $(TARGETS)
 
-# Rule: .c -> .exe
-%.exe: %.c
+# Ensure build directory exists
+dirs:
+	$(MKDIR_P)
+
+# Rule: source.c -> build/source.exe
+$(BUILDDIR)/%.exe: %.c
 	$(CC) $(CFLAGS) $< -o $@
 
-# Clean: remove all .exe files (and any .o if you add them later)
+# Convenience rule: treat "source.exe" as alias for full path "build/source.exe"
+%.exe: $(BUILDDIR)/%.exe
+	$(NOOP)
+
+# Clean: remove all .exe files in build/
 clean:
-	rm -f $(TARGETS)
+	$(RM_EXE)

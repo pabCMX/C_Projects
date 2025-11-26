@@ -114,67 +114,49 @@ $(BUILDDIR)/%.exe: %.c
 | `$@` | The target file (e.g., `build/ex1.exe`) |
 | `%` | Pattern wildcard (matches any filename) |
 
-### PowerShell vs POSIX Shells
+### Cross-Platform Support
 
-The Makefiles in this repo use PowerShell on Windows. The `Makefile.example` is set up for POSIX (Bash/Linux) by default, with comments showing the PowerShell alternatives.
+The Makefiles in this repo automatically detect your operating system and use the appropriate shell commands. No manual configuration is needed—the same Makefile works on both Windows (PowerShell/cmd) and POSIX systems (Linux, macOS).
 
-**To switch between shells, edit the following in the Makefile:**
+#### How It Works
 
-#### 1. Shell Declaration (top of file)
+The Makefile uses Make's built-in `OS` environment variable to detect the platform:
 
 ```makefile
-# POSIX (default - these lines commented out or absent):
-# (uses /bin/sh by default)
-
-# PowerShell (uncomment these):
-SHELL = pwsh.exe
-.SHELLFLAGS = -NoLogo -NoProfile -Command
+# Detect platform via OS environment variable (Windows sets OS=Windows_NT)
+ifeq ($(OS),Windows_NT)
+    # Commands for Windows (calls PowerShell for complex operations)
+    MKDIR_P = powershell -NoLogo -NoProfile -Command "New-Item -ItemType Directory -Path '$(BUILDDIR)' -Force | Out-Null"
+    RM_EXE  = powershell -NoLogo -NoProfile -Command "if (Test-Path '$(BUILDDIR)') { Remove-Item '$(BUILDDIR)/*.exe' -ErrorAction SilentlyContinue }"
+    NOOP    = @echo.>nul
+else
+    # Commands for POSIX shells (Linux, macOS, etc.)
+    MKDIR_P = mkdir -p $(BUILDDIR)
+    RM_EXE  = rm -f $(TARGETS)
+    NOOP    = @:
+endif
 ```
 
-#### 2. The `dirs` Target (create build directory)
+These platform-specific variables are then used in the targets:
 
 ```makefile
-# POSIX:
 dirs:
-    mkdir -p $(BUILDDIR)
+    $(MKDIR_P)
 
-# PowerShell:
-dirs:
-    New-Item -ItemType Directory -Path "$(BUILDDIR)" -Force | Out-Null
-```
-
-#### 3. The `%.exe` Rule (no-op command)
-
-```makefile
-# POSIX:
 %.exe: $(BUILDDIR)/%.exe
-    @:
+    $(NOOP)
 
-# PowerShell:
-%.exe: $(BUILDDIR)/%.exe
-    '' | Out-Null
+clean:
+    $(RM_EXE)
 ```
 
-#### 4. The `clean` Target (delete executables)
+#### Platform-Specific Commands Reference
 
-```makefile
-# POSIX:
-clean:
-    rm -f $(TARGETS)
-
-# PowerShell:
-clean:
-    if (Test-Path "$(BUILDDIR)") { Remove-Item "$(BUILDDIR)/*.exe" -ErrorAction SilentlyContinue }
-```
-
-#### Quick Reference Table
-
-| Operation | POSIX (Bash) | PowerShell |
-|-----------|--------------|------------|
-| Shell declaration | *(default)* | `SHELL = pwsh.exe` + `.SHELLFLAGS = ...` |
-| Create directory | `mkdir -p $(BUILDDIR)` | `New-Item -ItemType Directory -Path "$(BUILDDIR)" -Force \| Out-Null` |
-| No-op command | `@:` | `'' \| Out-Null` |
-| Delete files | `rm -f $(TARGETS)` | `if (Test-Path ...) { Remove-Item ... }` |
+| Operation | POSIX (Bash) | Windows (cmd/PowerShell) |
+|-----------|--------------|--------------------------|
+| Create directory | `mkdir -p $(BUILDDIR)` | `powershell ... New-Item ...` |
+| No-op command | `@:` | `@echo.>nul` |
+| Delete files | `rm -f $(TARGETS)` | `powershell ... Remove-Item ...` |
 
 ---
 
