@@ -2,16 +2,19 @@
 #include <stdio.h>
 
 int main(void) {
-  double input = 1, max = 0;
+  double input = 1, max;
 
+  printf("Enter a positive number (0 to exit): ");
+  scanf("%lf", &input);
+  max = input;
   while (input > 0) {
-    printf("Enter a number: ");
-    scanf("%lf", &input);
     if (input > max) {
       max = input;
     }
+    printf("Enter a positive number (0 to exit): ");
+    scanf("%lf", &input);
   }
-  printf("The largest number entered was: %lf", max);
+  printf("The largest number entered was: %lf\n", max);
 
   return 0;
 }
