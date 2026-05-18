@@ -477,11 +477,55 @@ static int run_prime_search(uint64_t end, int threads, bool verbose,
     return 0;
 }
 
-static void print_elapsed(double seconds) {
+static double monotonic_seconds(void) {
+#ifdef _WIN32
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER counter;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&counter);
+    return (double)counter.QuadPart / (double)frequency.QuadPart;
+#else
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (double)now.tv_sec + (double)now.tv_nsec / 1000000000.0;
+#endif
+}
+
+static double process_cpu_seconds(void) {
+#ifdef _WIN32
+    FILETIME create_time;
+    FILETIME exit_time;
+    FILETIME kernel_time;
+    FILETIME user_time;
+
+    if (!GetProcessTimes(GetCurrentProcess(), &create_time, &exit_time,
+                         &kernel_time, &user_time)) {
+        return 0.0;
+    }
+
+    const ULONGLONG kernel_ticks =
+        ((ULONGLONG)kernel_time.dwHighDateTime << 32) |
+        (ULONGLONG)kernel_time.dwLowDateTime;
+    const ULONGLONG user_ticks =
+        ((ULONGLONG)user_time.dwHighDateTime << 32) |
+        (ULONGLONG)user_time.dwLowDateTime;
+
+    return (double)(kernel_ticks + user_ticks) / 10000000.0;
+#else
+#if defined(CLOCK_PROCESS_CPUTIME_ID)
+    struct timespec ts;
+    if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == 0) {
+        return (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
+    }
+#endif
+    return (double)clock() / (double)CLOCKS_PER_SEC;
+#endif
+}
+
+static void print_elapsed(const char *label, double seconds) {
     const unsigned long minutes = (unsigned long)(seconds / 60.0);
     const double remainder = seconds - (60.0 * (double)minutes);
-    printf("Finished prime search in %lu minutes and %.2f seconds.\n", minutes,
-           remainder);
+    printf("%s %lu minutes and %.2f seconds.\n", label, minutes, remainder);
 }
 
 int main(int argc, char *argv[]) {
@@ -523,7 +567,8 @@ int main(int argc, char *argv[]) {
         fputs("\n", stdout);
     }
 
-    const clock_t start = clock();
+    const double cpu_start = process_cpu_seconds();
+    const double wall_start = monotonic_seconds();
 
     u128 prime_sum = 0;
     uint64_t prime_count = 0;
@@ -532,9 +577,8 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    const clock_t finish = clock();
-    const double elapsed =
-        (double)(finish - start) / (double)CLOCKS_PER_SEC;
+    const double wall_elapsed = monotonic_seconds() - wall_start;
+    const double cpu_elapsed = process_cpu_seconds() - cpu_start;
 
     if (sum_only) {
         print_u128_plain(prime_sum);
@@ -547,7 +591,8 @@ int main(int argc, char *argv[]) {
         return EXIT_SUCCESS;
     }
 
-    print_elapsed(elapsed);
+    print_elapsed("Finished prime search in", wall_elapsed);
+    print_elapsed("CPU time:", cpu_elapsed);
 
     fputs("Now totaling all primes between 0 and ", stdout);
     print_u64_commas(end);
