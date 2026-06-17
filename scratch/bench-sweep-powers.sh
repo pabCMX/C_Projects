@@ -11,12 +11,16 @@
 # L2_KIB is per physical core. Workers should be (physical cores - 1), not logical.
 # If logical > physical (SMT), two workers on one core share L2 and execution units.
 #
-# Requires: bash, gcc, python3
+# Requires: bash, make, gcc, python3
 
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 cd "$SCRIPT_DIR"
+
+BUILDDIR=${BUILDDIR:-build}
+ORIG=./${BUILDDIR}/primeSearch.exe
+BIT=./${BUILDDIR}/primeSearchBitArrays.exe
 
 detect_cpu_topology() {
     LOGICAL=${LOGICAL:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc)}
@@ -59,12 +63,8 @@ SEGMENT_KIB=${SEGMENT_KIB:-256} # bit version @ 1ULL << 21
 OVERHEAD_KIB=${OVERHEAD_KIB:-32}
 RUNS=${RUNS:-3}                 # timed runs per point (best of last two kept)
 
-ORIG=./primeSearch
-BIT=./primeSearchBitArrays
-
-echo "Building..." >&2
-gcc -O2 -pthread -o primeSearch primeSearch.c
-gcc -O2 -pthread -o primeSearchBitArrays primeSearchBitArrays.c
+echo "Building (via Makefile: -O3 -march=native)..." >&2
+make "${ORIG#./}" "${BIT#./}"
 
 base_budget_kib=$((L2_KIB - SEGMENT_KIB - OVERHEAD_KIB))
 workers=$((PHYSICAL > 1 ? PHYSICAL - 1 : 1))

@@ -341,6 +341,27 @@ static int read_sysfs_int(const char *path) {
     return value;
 }
 
+static bool sysfs_cpu_topology_path(char *path, size_t path_size,
+                                    const char *cpu_name,
+                                    const char *field) {
+    static const char prefix[] = "/sys/devices/system/cpu/";
+    static const char middle[] = "/topology/";
+    const size_t field_len = strlen(field);
+    const size_t fixed_len =
+        (sizeof prefix - 1) + (sizeof middle - 1) + field_len;
+
+    if (path_size <= fixed_len) {
+        return false;
+    }
+
+    const int name_max = (int)(path_size - fixed_len - 1);
+    const int written = snprintf(
+        path, path_size, "%s%.*s%s%s", prefix, name_max, cpu_name, middle,
+        field);
+
+    return written > 0 && (size_t)written < path_size;
+}
+
 static int physical_core_count(void) {
 #ifdef _WIN32
     DWORD buffer_length = 0;
@@ -399,14 +420,15 @@ static int physical_core_count(void) {
 
             {
                 char path[256];
-                snprintf(path, sizeof path,
-                         "/sys/devices/system/cpu/%s/topology/"
-                         "physical_package_id",
-                         entry->d_name);
+                if (!sysfs_cpu_topology_path(path, sizeof path, entry->d_name,
+                                             "physical_package_id")) {
+                    goto next_cpu;
+                }
                 const int package_id = read_sysfs_int(path);
-                snprintf(path, sizeof path,
-                         "/sys/devices/system/cpu/%s/topology/core_id",
-                         entry->d_name);
+                if (!sysfs_cpu_topology_path(path, sizeof path, entry->d_name,
+                                             "core_id")) {
+                    goto next_cpu;
+                }
                 const int core_id = read_sysfs_int(path);
                 if (package_id < 0 || core_id < 0) {
                     goto next_cpu;
