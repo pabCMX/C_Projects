@@ -10,6 +10,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
+#include <ctype.h>
+#include <dirent.h>
 #include <pthread.h>
 #include <unistd.h>
 #endif
@@ -324,20 +326,131 @@ static void *sieve_worker(void *arg) {
 #endif
 }
 
+static int read_sysfs_int(const char *path) {
+    FILE *file = fopen(path, "r");
+    if (file == NULL) {
+        return -1;
+    }
+
+    int value = -1;
+    if (fscanf(file, "%d", &value) != 1) {
+        value = -1;
+    }
+
+    fclose(file);
+    return value;
+}
+
+static int physical_core_count(void) {
+#ifdef _WIN32
+    DWORD buffer_length = 0;
+    GetLogicalProcessorInformation(NULL, &buffer_length);
+    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+        return 1;
+    }
+
+    SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buffer = malloc(buffer_length);
+    if (buffer == NULL) {
+        return 1;
+    }
+
+    if (!GetLogicalProcessorInformation(buffer, &buffer_length)) {
+        free(buffer);
+        return 1;
+    }
+
+    int cores = 0;
+    const DWORD count =
+        buffer_length / (DWORD)sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+    for (DWORD i = 0; i < count; ++i) {
+        if (buffer[i].Relationship == RelationProcessorCore) {
+            ++cores;
+        }
+    }
+
+    free(buffer);
+    return cores > 0 ? cores : 1;
+#else
+    DIR *dir = opendir("/sys/devices/system/cpu");
+    if (dir != NULL) {
+        struct core_key {
+            int package_id;
+            int core_id;
+        } cores[1024];
+        int core_count = 0;
+
+        struct dirent *entry = NULL;
+        while ((entry = readdir(dir)) != NULL) {
+            if (entry->d_name[0] != 'c' ||
+                strncmp(entry->d_name, "cpu", 3) != 0) {
+                continue;
+            }
+
+            const char *suffix = entry->d_name + 3;
+            if (*suffix == '\0') {
+                continue;
+            }
+
+            for (const char *ch = suffix; *ch != '\0'; ++ch) {
+                if (!isdigit((unsigned char)*ch)) {
+                    goto next_cpu;
+                }
+            }
+
+            {
+                char path[256];
+                snprintf(path, sizeof path,
+                         "/sys/devices/system/cpu/%s/topology/"
+                         "physical_package_id",
+                         entry->d_name);
+                const int package_id = read_sysfs_int(path);
+                snprintf(path, sizeof path,
+                         "/sys/devices/system/cpu/%s/topology/core_id",
+                         entry->d_name);
+                const int core_id = read_sysfs_int(path);
+                if (package_id < 0 || core_id < 0) {
+                    goto next_cpu;
+                }
+
+                int found = 0;
+                for (int i = 0; i < core_count; ++i) {
+                    if (cores[i].package_id == package_id &&
+                        cores[i].core_id == core_id) {
+                        found = 1;
+                        break;
+                    }
+                }
+
+                if (!found && core_count < (int)(sizeof cores / sizeof cores[0])) {
+                    cores[core_count].package_id = package_id;
+                    cores[core_count].core_id = core_id;
+                    ++core_count;
+                }
+            }
+
+        next_cpu:
+            continue;
+        }
+
+        closedir(dir);
+        if (core_count > 0) {
+            return core_count;
+        }
+    }
+
+    {
+        const long logical = sysconf(_SC_NPROCESSORS_ONLN);
+        return logical > 0 ? (int)logical : 1;
+    }
+#endif
+}
+
 static int worker_thread_count(void) {
-    unsigned int cores = 1;
+    int cores = physical_core_count();
 
 #ifdef _WIN32
-    SYSTEM_INFO info;
-    GetSystemInfo(&info);
-    cores = info.dwNumberOfProcessors;
     if (cores > MAXIMUM_WAIT_OBJECTS) {
         cores = MAXIMUM_WAIT_OBJECTS;
-    }
-#else
-    long detected = sysconf(_SC_NPROCESSORS_ONLN);
-    if (detected > 0) {
-        cores = (unsigned int)detected;
     }
 #endif
 
@@ -345,7 +458,7 @@ static int worker_thread_count(void) {
         return 1;
     }
 
-    return (int)(cores - 1);
+    return cores - 1;
 }
 
 static int run_prime_search(uint64_t end, int threads, bool verbose,
