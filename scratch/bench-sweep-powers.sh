@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sweep endpoint = 2^N for both primeSearch variants.
+# Sweep endpoint = 2^N for primeSearch variants.
 # Highlights when the base-primes table exceeds per-physical-core L2 budget.
 #
 # Usage:
@@ -21,6 +21,8 @@ cd "$SCRIPT_DIR"
 BUILDDIR=${BUILDDIR:-build}
 ORIG=./${BUILDDIR}/primeSearch.exe
 BIT=./${BUILDDIR}/primeSearchBitArrays.exe
+BLK=./${BUILDDIR}/primeSearchBlockScheduleWithRollingOffsets.exe
+OPT=./${BUILDDIR}/primeSearchPresieveOptimized.exe
 
 detect_cpu_topology() {
     LOGICAL=${LOGICAL:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc)}
@@ -59,12 +61,12 @@ if [[ "${3:-}" == "--csv" ]] || [[ "${2:-}" == "--csv" ]]; then
 fi
 
 L2_KIB=${L2_KIB:-512}           # per physical core; 3900X=512, Xeon 6230=1024
-SEGMENT_KIB=${SEGMENT_KIB:-256} # bit version @ 1ULL << 21
+SEGMENT_KIB=${SEGMENT_KIB:-512} # optimized version @ 1ULL << 22 odd slots
 OVERHEAD_KIB=${OVERHEAD_KIB:-32}
-RUNS=${RUNS:-3}                 # timed runs per point (best of last two kept)
+RUNS=${RUNS:-1}                 # timed runs per point (best of last two kept)
 
 echo "Building (via Makefile: -O3 -march=native)..." >&2
-make "${ORIG#./}" "${BIT#./}"
+make "${ORIG#./}" "${BIT#./}" "${BLK#./}" "${OPT#./}"
 
 base_budget_kib=$((L2_KIB - SEGMENT_KIB - OVERHEAD_KIB))
 workers=$((PHYSICAL > 1 ? PHYSICAL - 1 : 1))
@@ -106,7 +108,7 @@ PY
 }
 
 if [[ $CSV -eq 1 ]]; then
-    echo "exp,end,sqrt_end,base_primes,base_kib,l2_over,l2_kib,orig_wall,bit_wall,speedup,sum_ok"
+    echo "exp,end,sqrt_end,base_primes,base_kib,l2_over,l2_kib,orig_wall,bit_wall,blk_wall,opt_wall,speedup_bit,speedup_blk,speedup_opt,sum_ok"
 else
     printf '\n'
     printf 'CPU: %s physical cores, %s logical CPUs, SMT=%sx\n' \
@@ -118,9 +120,9 @@ else
     fi
     printf 'L2 model: %s KiB per physical core, %s KiB segment, %s KiB overhead → %s KiB base budget\n' \
         "$L2_KIB" "$SEGMENT_KIB" "$OVERHEAD_KIB" "$base_budget_kib"
-    printf '%-4s %-14s %-10s %-8s %-6s %-5s %-8s %-8s %-8s %-7s %s\n' \
-        'exp' 'end' 'sqrt(end)' 'base_KiB' 'L2?' 'runs' 'orig_s' 'bit_s' 'speedup' 'ok' 'notes'
-    printf '%s\n' '---- -------------- ---------- -------- ------ ----- -------- -------- ------- --- -----'
+    printf '%-4s %-14s %-10s %-8s %-6s %-5s %-8s %-8s %-8s %-8s %-7s %-7s %-7s %-3s %s\n' \
+        'exp' 'end' 'sqrt(end)' 'base_KiB' 'L2?' 'runs' 'orig_s' 'bit_s' 'blk_s' 'opt_s' 'sp_bit' 'sp_blk' 'sp_opt' 'ok' 'notes'
+    printf '%s\n' '---- -------------- ---------- -------- ------ ----- -------- -------- -------- -------- ------- ------- ------- --- -----'
 fi
 
 for exp in $(seq "$EXP_MIN" "$EXP_MAX"); do
@@ -140,16 +142,23 @@ PY
 
     read -r orig_wall orig_sum <<< "$(run_timed "$ORIG" "$end")"
     read -r bit_wall bit_sum <<< "$(run_timed "$BIT" "$end")"
+    read -r blk_wall blk_sum <<< "$(run_timed "$BLK" "$end")"
+    read -r opt_wall opt_sum <<< "$(run_timed "$OPT" "$end")"
 
     ok=yes
-    [[ "$orig_sum" == "$bit_sum" ]] || ok=MISMATCH
+    if [[ "$orig_sum" != "$bit_sum" || "$orig_sum" != "$blk_sum" || "$orig_sum" != "$opt_sum" ]]; then
+        ok=MISMATCH
+    fi
 
-    speedup=$(python3 - "$orig_wall" "$bit_wall" <<'PY'
+    read -r speedup_bit speedup_blk speedup_opt <<< "$(python3 - "$orig_wall" "$bit_wall" "$blk_wall" "$opt_wall" <<'PY'
 import sys
-o, b = map(float, sys.argv[1:3])
-print(f"{o/b:.2f}" if b > 0 else "inf")
+o, b, k, p = map(float, sys.argv[1:5])
+sp_bit = f"{o/b:.2f}" if b > 0 else "inf"
+sp_blk = f"{o/k:.2f}" if k > 0 else "inf"
+sp_opt = f"{o/p:.2f}" if p > 0 else "inf"
+print(sp_bit, sp_blk, sp_opt)
 PY
-)
+)"
 
     note=""
     if [[ "$l2_over" == yes ]]; then
@@ -157,11 +166,12 @@ PY
     fi
 
     if [[ $CSV -eq 1 ]]; then
-        echo "$exp,$end,$root,$prime_count,$base_kib,$l2_over,$L2_KIB,$orig_wall,$bit_wall,$speedup,$ok"
+        echo "$exp,$end,$root,$prime_count,$base_kib,$l2_over,$L2_KIB,$orig_wall,$bit_wall,$blk_wall,$opt_wall,$speedup_bit,$speedup_blk,$speedup_opt,$ok"
     else
-        printf '%-4s %-14s %-10s %-8s %-6s %-5s %-8s %-8s %-7s %-3s %s\n' \
+        printf '%-4s %-14s %-10s %-8s %-6s %-5s %-8s %-8s %-8s %-8s %-7s %-7s %-7s %-3s %s\n' \
             "$exp" "$end" "$root" "$base_kib" "$l2_over" "$RUNS" \
-            "$orig_wall" "$bit_wall" "$speedup" "$ok" "$note"
+            "$orig_wall" "$bit_wall" "$blk_wall" "$opt_wall" \
+            "$speedup_bit" "$speedup_blk" "$speedup_opt" "$ok" "$note"
     fi
 done
 
@@ -170,7 +180,9 @@ if [[ $CSV -eq 0 ]]; then
     printf 'Notes:\n'
     printf '  - end = 2^exp; L2? = yes when estimated base_kib > %s KiB (one worker per physical core).\n' "$base_budget_kib"
     printf '  - With SMT oversubscription, halve L2_KIB (or use shared budget ~%s KiB) for the cliff estimate.\n' "$shared_base_budget_kib"
-    printf '  - speedup = orig_wall / bit_wall (higher = bit version wins).\n'
+    printf '  - speedups are orig_wall / variant_wall (higher = faster).\n'
+    printf '  - blk = primeSearchBlockScheduleWithRollingOffsets (static blocks + rolling offsets + word scan).\n'
+    printf '  - opt = primeSearchPresieveOptimized (word pre-sieve + rolling offsets + compact cursors).\n'
     printf '  - Watch for speedup compression or bit/orig wall times converging after L2? flips to yes.\n'
-    printf '  - For Xeon 6230: L2_KIB=1024 SEGMENT_KIB=256 OVERHEAD_KIB=32 ./bench-sweep-powers.sh\n'
+    printf '  - For Xeon 6230: L2_KIB=1024 SEGMENT_KIB=512 OVERHEAD_KIB=32 ./bench-sweep-powers.sh\n'
 fi
