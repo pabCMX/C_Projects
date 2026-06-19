@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Cost Calculator - Self-Contained C Lesson</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --paper: #fffcf7;
+      --ink: #1c1917;
+      --muted: #57534e;
+      --accent: #b45309;
+      --accent-dark: #92400e;
+      --accent-soft: #fef3c7;
+      --code-bg: #292524;
+      --code-ink: #fafaf9;
+      --border: #e7e5e4;
+      --success: #166534;
+      --success-bg: #dcfce7;
+      --warning: #854d0e;
+      --warning-bg: #fef9c3;
+      --shadow: 0 10px 30px rgba(28, 25, 23, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      background:
+        radial-gradient(circle at top left, rgba(180, 83, 9, 0.10), transparent 32rem),
+        var(--bg);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    .wrap {
+      max-width: 58rem;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    header,
+    section,
+    nav {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    header {
+      padding: 2rem 2rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      margin: 0 0 0.45rem;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 48rem;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+    }
+
+    .pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      border: 1px solid #fde68a;
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+    }
+
+    nav {
+      margin: 0 0 1.25rem;
+      padding: 1rem 1.1rem;
+      background: rgba(255, 252, 247, 0.9);
+    }
+
+    nav strong {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    nav ol {
+      margin: 0;
+      padding-left: 1.2rem;
+      columns: 2;
+      column-gap: 2rem;
+    }
+
+    @media (max-width: 720px) {
+      nav ol {
+        columns: 1;
+      }
+    }
+
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    section {
+      padding: 1.65rem 1.8rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h2 {
+      margin: 0 0 0.85rem;
+      font-size: 1.45rem;
+      letter-spacing: -0.015em;
+    }
+
+    h3 {
+      margin: 1.45rem 0 0.55rem;
+      font-size: 1.08rem;
+      color: var(--accent);
+    }
+
+    h4 {
+      margin: 1.1rem 0 0.35rem;
+      font-size: 1rem;
+    }
+
+    p,
+    li {
+      font-size: 1.02rem;
+    }
+
+    ul,
+    ol {
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 0.35rem;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+      background: #f5f5f4;
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.08rem 0.35rem;
+    }
+
+    pre {
+      margin: 1rem 0;
+      padding: 1rem 1.1rem;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 0.75rem;
+      overflow-x: auto;
+      line-height: 1.5;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    pre code {
+      background: none;
+      border: 0;
+      padding: 0;
+      color: inherit;
+      font-size: 0.88rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.65rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #fafaf9;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    td.num,
+    th.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note,
+    .checkpoint,
+    .warning {
+      margin: 1rem 0;
+      padding: 0.85rem 1rem;
+      border-radius: 0.65rem;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .note strong {
+      color: var(--accent-dark);
+    }
+
+    .checkpoint {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+      font-weight: 600;
+    }
+
+    .warning {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border: 1px solid #fde68a;
+    }
+
+    .lesson-card {
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      padding: 1rem;
+      background: #fafaf9;
+      margin: 1rem 0;
+    }
+
+    .lesson-card h3 {
+      margin-top: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+      gap: 1rem;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Token Cost Calculator</h1>
+      <p class="subtitle">
+        A self-contained learning module for building a real C program that reads Cursor usage CSVs,
+        filters rows by month, calculates token costs, and prints a useful report.
+      </p>
+      <div class="meta">
+        <span class="pill">scratch/aiTokenCostCalculator.c</span>
+        <span class="pill">scratch/aiTokenCostCalculator.example.c</span>
+        <span class="pill">C23</span>
+        <span class="pill">FILE *</span>
+        <span class="pill">strings</span>
+        <span class="pill">structs</span>
+      </div>
+    </header>
+
+    <nav>
+      <strong>Lesson map</strong>
+      <ol>
+        <li><a href="#mission">Mission</a></li>
+        <li><a href="#setup">How to Run the Examples</a></li>
+        <li><a href="#csv-shape">The CSV Shape</a></li>
+        <li><a href="#mental-model">Program Mental Model</a></li>
+        <li><a href="#file-io">File I/O</a></li>
+        <li><a href="#strings">Strings</a></li>
+        <li><a href="#argv">Command-Line Arguments</a></li>
+        <li><a href="#structs">Structs</a></li>
+        <li><a href="#arrays">Arrays of Structs</a></li>
+        <li><a href="#parse-csv">CSV Parsing</a></li>
+        <li><a href="#dates">Dates and Filtering</a></li>
+        <li><a href="#numbers">Converting Text to Numbers</a></li>
+        <li><a href="#cost">Cost Math</a></li>
+        <li><a href="#aggregation">Aggregation</a></li>
+        <li><a href="#sorting">Sorting</a></li>
+        <li><a href="#build-order">Build Order</a></li>
+        <li><a href="#debugging">Debugging</a></li>
+        <li><a href="#reference">Pricing Reference</a></li>
+      </ol>
+    </nav>
+
+    <section id="mission">
+      <h2>1. What You Are Building</h2>
+      <p>
+        The project is a command-line program. You give it a CSV file and a month. It reads the file,
+        ignores rows from other months, calculates a dollar cost for each matching row, adds the rows
+        together by model, and prints a summary.
+      </p>
+
+      <h3>Example final use</h3>
+      <pre><code>cd ~/dev/C_Projects/scratch
+make aiTokenCostCalculator.exe
+./build/aiTokenCostCalculator.exe ~/Downloads/usage-events-2026-06-18.csv 2026 6</code></pre>
+
+      <h3>Inputs and output</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Thing</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>~/Downloads/usage-events-2026-06-18.csv</code></td>
+            <td>The CSV export from Cursor.</td>
+          </tr>
+          <tr>
+            <td><code>2026</code></td>
+            <td>The year you want to count.</td>
+          </tr>
+          <tr>
+            <td><code>6</code></td>
+            <td>The month you want to count. June is <code>6</code>, not <code>06</code>.</td>
+          </tr>
+          <tr>
+            <td>Printed report</td>
+            <td>Total cost, per-model costs, token totals, and skipped unknown model rows.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="note">
+        <strong>Important learning goal:</strong> this project uses concepts from later C chapters:
+        strings, arrays, structs, file input, helper functions, and standard library functions.
+        That is okay. Treat it as a guided preview of real C programming, not as proof that you
+        were supposed to know all of this already.
+      </p>
+    </section>
+
+    <section id="setup">
+      <h2>2. How to Run the Examples</h2>
+      <p>
+        Every topic below has a tiny program. The fastest way to learn is to run the tiny program
+        first, change one value, run it again, and only then move the idea into
+        <code>aiTokenCostCalculator.c</code>.
+      </p>
+
+      <h3>Create a temporary practice file</h3>
+      <pre><code>cd ~/dev/C_Projects/scratch
+mkdir -p build
+nano lesson_practice.c</code></pre>
+
+      <p>
+        Paste one small example into <code>lesson_practice.c</code>, then compile and run it:
+      </p>
+
+      <pre><code>gcc -std=c23 -Wall -Wextra -pedantic -g lesson_practice.c -o build/lesson_practice.exe
+./build/lesson_practice.exe</code></pre>
+
+      <h3>What each command means</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Command part</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>gcc</code></td>
+            <td>Runs the C compiler.</td>
+          </tr>
+          <tr>
+            <td><code>-std=c23</code></td>
+            <td>Uses the C23 language standard, matching this repo.</td>
+          </tr>
+          <tr>
+            <td><code>-Wall -Wextra -pedantic</code></td>
+            <td>Turns on warnings that catch common mistakes.</td>
+          </tr>
+          <tr>
+            <td><code>-g</code></td>
+            <td>Adds debug information. It does not change how the program behaves.</td>
+          </tr>
+          <tr>
+            <td><code>lesson_practice.c</code></td>
+            <td>The source file being compiled.</td>
+          </tr>
+          <tr>
+            <td><code>-o build/lesson_practice.exe</code></td>
+            <td>The output executable file.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="checkpoint">
+        Checkpoint: before touching the calculator, make sure you can compile and run one tiny
+        practice program from this lesson.
+      </p>
+    </section>
+
+    <section id="csv-shape">
+      <h2>3. Understand the CSV Shape</h2>
+      <p>
+        CSV means comma-separated values. Each row is one event. Each comma usually moves you to the
+        next field. The program only needs a few columns from each row.
+      </p>
+
+      <h3>The columns this project cares about</h3>
+      <table>
+        <thead>
+          <tr>
+            <th class="num">Field index</th>
+            <th>Column meaning</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">0</td>
+            <td>Date</td>
+            <td><code>2026-06-18T03:24:40.767Z</code></td>
+          </tr>
+          <tr>
+            <td class="num">4</td>
+            <td>Model name</td>
+            <td><code>composer-2.5-fast</code></td>
+          </tr>
+          <tr>
+            <td class="num">6</td>
+            <td>Input tokens with cache write</td>
+            <td><code>1200</code></td>
+          </tr>
+          <tr>
+            <td class="num">7</td>
+            <td>Input tokens without cache write</td>
+            <td><code>3400</code></td>
+          </tr>
+          <tr>
+            <td class="num">8</td>
+            <td>Cache-read input tokens</td>
+            <td><code>90000</code></td>
+          </tr>
+          <tr>
+            <td class="num">9</td>
+            <td>Output tokens</td>
+            <td><code>500</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Small fake row</h3>
+      <pre><code>2026-06-18T03:24:40.767Z,x,x,x,composer-2.5-fast,x,1200,3400,90000,500</code></pre>
+
+      <p>
+        Read it like this: date field, three fields you do not care about, model field, one more
+        field you do not care about, then four token fields. The <code>x</code> values are placeholders
+        here only to make the field numbers line up.
+      </p>
+
+      <p class="warning">
+        Real CSV files can contain quotes. A field might look like <code>"composer-2.5-fast"</code>
+        instead of <code>composer-2.5-fast</code>. Your parser needs to handle that before string
+        comparisons work reliably.
+      </p>
+    </section>
+
+    <section id="mental-model">
+      <h2>4. The Whole Program in Plain English</h2>
+      <p>
+        Before learning the new C tools, keep the whole project shape in your head. Most bugs become
+        easier when you know which stage is supposed to be responsible for what.
+      </p>
+
+      <pre><code>get the CSV path, year, and month from argv
+open the CSV file
+read and ignore the header row
+
+for each remaining line:
+  split the line into fields
+  parse the date from field 0
+  if the date is not the requested month, skip the row
+  find the pricing table entry for field 4
+  convert fields 6, 7, 8, and 9 to long integers
+  calculate this row's cost
+  add the row's tokens and cost to that model's running totals
+
+sort the model totals by cost
+print the report</code></pre>
+
+      <p>
+        That outline is your map. Each section below teaches one piece of that map.
+      </p>
+    </section>
+
+    <section id="file-io">
+      <h2>5. File I/O: Reading a File One Line at a Time</h2>
+      <p>
+        Up to now, you have mostly used keyboard input with <code>scanf</code>. File input uses a
+        different pattern:
+      </p>
+
+      <ul>
+        <li><code>FILE *</code> is a handle to an open file.</li>
+        <li><code>fopen(path, "r")</code> opens a file for reading.</li>
+        <li><code>fgets(line, sizeof(line), input)</code> reads one line into a character array.</li>
+        <li><code>fclose(input)</code> closes the file when you are done.</li>
+      </ul>
+
+      <h3>Tiny complete program: count lines</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  const char *path = "/home/phantompc/Downloads/usage-events-2026-06-18.csv";
+
+  FILE *input = fopen(path, "r");
+  if (input == NULL) {
+    printf("Could not open %s\n", path);
+    return 1;
+  }
+
+  char line[8192];
+  int lines = 0;
+
+  while (fgets(line, sizeof(line), input) != NULL) {
+    lines++;
+  }
+
+  fclose(input);
+
+  printf("Read %d lines\n", lines);
+  return 0;
+}</code></pre>
+
+      <h3>Expected result</h3>
+      <pre><code>Read 141 lines</code></pre>
+
+      <p>
+        Your exact number might differ if the CSV export changed. The important thing is that the
+        number is not zero and the program does not print the error message.
+      </p>
+
+      <h3>Skipping the header row</h3>
+      <p>
+        The first row usually contains column names, not data. Read one line before the loop:
+      </p>
+
+      <pre><code>if (fgets(line, sizeof(line), input) == NULL) {
+  printf("The file is empty\n");
+  fclose(input);
+  return 1;
+}
+
+while (fgets(line, sizeof(line), input) != NULL) {
+  printf("%s", line);
+}</code></pre>
+
+      <p class="note">
+        <strong>Calculator connection:</strong> your current starter file already opens the CSV,
+        skips the header, prints each remaining line, and counts those data rows. That is a good
+        first milestone.
+      </p>
+    </section>
+
+    <section id="strings">
+      <h2>6. Strings: Text Stored in <code>char</code> Arrays</h2>
+      <p>
+        In C, a string is not a special built-in type. It is an array of <code>char</code> values
+        ending with a special byte called the null terminator: <code>'\0'</code>. The terminator
+        tells functions where the text stops.
+      </p>
+
+      <h3>Tiny complete program: print and compare strings</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int main(void) {
+  char model[64] = "composer-2.5-fast";
+
+  printf("model = %s\n", model);
+  printf("length = %zu\n", strlen(model));
+
+  if (strcmp(model, "composer-2.5-fast") == 0) {
+    printf("The model names match\n");
+  }
+
+  return 0;
+}</code></pre>
+
+      <h3>Expected output</h3>
+      <pre><code>model = composer-2.5-fast
+length = 18
+The model names match</code></pre>
+
+      <h3>Why <code>strcmp</code> instead of <code>==</code>?</h3>
+      <p>
+        With numbers, <code>a == b</code> compares values. With C strings, <code>==</code> does not
+        compare the text. It compares where the arrays live in memory. Use <code>strcmp(a, b)</code>
+        to compare the characters.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>strlen(s)</code></td>
+            <td>Counts characters before <code>'\0'</code>.</td>
+          </tr>
+          <tr>
+            <td><code>strcmp(a, b)</code></td>
+            <td>Returns <code>0</code> when strings contain the same text.</td>
+          </tr>
+          <tr>
+            <td><code>strncpy(dest, src, n)</code></td>
+            <td>Copies text into a fixed-size array. You still need to ensure <code>'\0'</code>.</td>
+          </tr>
+          <tr>
+            <td><code>strtol(s, NULL, 10)</code></td>
+            <td>Converts text like <code>"1234"</code> into a <code>long</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Safe fixed-buffer copy pattern</h3>
+      <pre><code>char name[64];
+
+strncpy(name, "composer-2.5-fast", sizeof(name) - 1);
+name[sizeof(name) - 1] = '\0';</code></pre>
+
+      <p>
+        The <code>sizeof(name) - 1</code> leaves room for the null terminator. The final assignment
+        guarantees the string is terminated even if the source text was too long.
+      </p>
+
+      <p class="note">
+        <strong>Calculator connection:</strong> model names come from the CSV as strings. Pricing
+        lookup is mostly a loop plus <code>strcmp</code>.
+      </p>
+    </section>
+
+    <section id="argv">
+      <h2>7. Command-Line Arguments: Let the User Choose the File</h2>
+      <p>
+        A normal <code>main(void)</code> ignores command-line arguments. To read arguments, write
+        <code>main</code> this way:
+      </p>
+
+      <pre><code>int main(int argc, char *argv[])</code></pre>
+
+      <ul>
+        <li><code>argc</code> is the argument count.</li>
+        <li><code>argv</code> is an array of strings.</li>
+        <li><code>argv[0]</code> is the program name.</li>
+        <li><code>argv[1]</code> is the first value typed after the program name.</li>
+      </ul>
+
+      <h3>Tiny complete program: inspect arguments</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+
+int main(int argc, char *argv[]) {
+  printf("argc = %d\n", argc);
+
+  for (int i = 0; i &lt; argc; i++) {
+    printf("argv[%d] = %s\n", i, argv[i]);
+  }
+
+  return 0;
+}</code></pre>
+
+      <h3>Run it with arguments</h3>
+      <pre><code>gcc -std=c23 -Wall -Wextra -pedantic -g lesson_practice.c -o build/lesson_practice.exe
+./build/lesson_practice.exe usage.csv 2026 6</code></pre>
+
+      <h3>Expected output shape</h3>
+      <pre><code>argc = 4
+argv[0] = ./build/lesson_practice.exe
+argv[1] = usage.csv
+argv[2] = 2026
+argv[3] = 6</code></pre>
+
+      <h3>Strict usage for the calculator</h3>
+      <pre><code>if (argc != 4) {
+  printf("Usage: %s &lt;csv-path&gt; &lt;year&gt; &lt;month&gt;\n", argv[0]);
+  return 1;
+}</code></pre>
+
+      <p>
+        Start strict. Require the file path, year, and month. Optional defaults using
+        <code>&lt;time.h&gt;</code> can come later, after the required-argument version works.
+      </p>
+    </section>
+
+    <section id="structs">
+      <h2>8. Structs: Group Related Values</h2>
+      <p>
+        A <code>struct</code> lets you create one value that contains several smaller values. For
+        this project, a model has four prices: normal input, cache-write input, cache-read input,
+        and output. Those prices belong together.
+      </p>
+
+      <h3>Tiny complete program: one pricing struct</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+
+typedef struct {
+  double input_no_cache;
+  double input_cache_write;
+  double input_cache_read;
+  double output;
+} Pricing;
+
+int main(void) {
+  Pricing composer = {
+      .input_no_cache = 3.00,
+      .input_cache_write = 3.00,
+      .input_cache_read = 0.50,
+      .output = 15.00,
+  };
+
+  printf("Normal input: $%.2f per million\n", composer.input_no_cache);
+  printf("Output:       $%.2f per million\n", composer.output);
+
+  return 0;
+}</code></pre>
+
+      <h3>New syntax explained</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Syntax</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>typedef struct { ... } Pricing;</code></td>
+            <td>Creates a new type name, <code>Pricing</code>.</td>
+          </tr>
+          <tr>
+            <td><code>.output = 15.00</code></td>
+            <td>A designated initializer. It puts <code>15.00</code> into the <code>output</code> field.</td>
+          </tr>
+          <tr>
+            <td><code>composer.output</code></td>
+            <td>Accesses one field using the dot operator.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="note">
+        <strong>Calculator connection:</strong> each model has a <code>Pricing</code> value. The cost
+        formula reads fields from that struct instead of juggling four separate variables.
+      </p>
+    </section>
+
+    <section id="arrays">
+      <h2>9. Arrays of Structs: Build a Pricing Table</h2>
+      <p>
+        One <code>Pricing</code> stores rates for one model. The calculator needs several models.
+        The natural shape is an array where each element stores the model name plus its prices.
+      </p>
+
+      <h3>Tiny complete program: pricing lookup</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+typedef struct {
+  double input_no_cache;
+  double input_cache_write;
+  double input_cache_read;
+  double output;
+} Pricing;
+
+typedef struct {
+  char name[64];
+  Pricing rates;
+} ModelPricing;
+
+int main(void) {
+  static const ModelPricing table[] = {
+      {
+          .name = "composer-2.5-fast",
+          .rates = {
+              .input_no_cache = 3.00,
+              .input_cache_write = 3.00,
+              .input_cache_read = 0.50,
+              .output = 15.00,
+          },
+      },
+      {
+          .name = "gpt-5.5-medium",
+          .rates = {
+              .input_no_cache = 5.00,
+              .input_cache_write = 5.00,
+              .input_cache_read = 0.50,
+              .output = 30.00,
+          },
+      },
+  };
+
+  const char *wanted = "gpt-5.5-medium";
+  size_t count = sizeof(table) / sizeof(table[0]);
+
+  for (size_t i = 0; i &lt; count; i++) {
+    if (strcmp(wanted, table[i].name) == 0) {
+      printf("%s output costs $%.2f per million\n",
+             table[i].name, table[i].rates.output);
+    }
+  }
+
+  return 0;
+}</code></pre>
+
+      <h3>Important pieces</h3>
+      <ul>
+        <li><code>static const</code> means this table is fixed program data.</li>
+        <li><code>sizeof(table) / sizeof(table[0])</code> calculates the number of array elements.</li>
+        <li><code>table[i].rates.output</code> means: array element, then nested struct field.</li>
+      </ul>
+
+      <p class="warning">
+        If the model name from the CSV has quotes or a trailing newline, <code>strcmp</code> will not
+        match. Clean the field before lookup.
+      </p>
+    </section>
+
+    <section id="parse-csv">
+      <h2>10. CSV Parsing: Split One Line into Fields</h2>
+      <p>
+        The tempting solution is <code>strtok(line, ",")</code>. That can work for very simple CSV,
+        but real CSV allows quoted fields. A comma inside quotes is data, not a separator.
+      </p>
+
+      <p>
+        For this project, use a small parser that walks the line one character at a time. It stores
+        pointers to the start of each field and edits the original line by replacing separators with
+        <code>'\0'</code>.
+      </p>
+
+      <h3>The core idea</h3>
+      <pre><code>Before:
+line = "date,x,x,x,model,x,1200,3400,90000,500"
+
+After splitting:
+fields[0] points to "date"
+fields[4] points to "model"
+fields[6] points to "1200"
+fields[9] points to "500"</code></pre>
+
+      <h3>Tiny complete program: split a simple line</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+
+int split_simple_csv(char *line, char *fields[], int max_fields) {
+  int count = 0;
+  char *cursor = line;
+
+  while (*cursor != '\0' && count &lt; max_fields) {
+    fields[count] = cursor;
+    count++;
+
+    while (*cursor != '\0' && *cursor != ',' && *cursor != '\n') {
+      cursor++;
+    }
+
+    if (*cursor == ',' || *cursor == '\n') {
+      *cursor = '\0';
+      cursor++;
+    }
+  }
+
+  return count;
+}
+
+int main(void) {
+  char line[] = "2026-06-18,x,x,x,composer-2.5-fast,x,1200,3400,90000,500";
+  char *fields[32];
+
+  int count = split_simple_csv(line, fields, 32);
+
+  printf("field count = %d\n", count);
+  printf("date  = %s\n", fields[0]);
+  printf("model = %s\n", fields[4]);
+  printf("out   = %s\n", fields[9]);
+
+  return 0;
+}</code></pre>
+
+      <h3>Expected output</h3>
+      <pre><code>field count = 10
+date  = 2026-06-18
+model = composer-2.5-fast
+out   = 500</code></pre>
+
+      <h3>Adding quote handling</h3>
+      <p>
+        The full reference version handles quotes by checking whether a field starts with
+        <code>"</code>. If it does, the parser advances past the opening quote and stops at the
+        closing quote instead of stopping at commas inside the quoted field.
+      </p>
+
+      <pre><code>if (*cursor == '"') {
+  fields[count - 1] = cursor + 1;  // skip the opening quote
+  cursor++;
+
+  while (*cursor != '\0' && *cursor != '"') {
+    cursor++;
+  }
+
+  if (*cursor == '"') {
+    *cursor = '\0';                // end the field at the closing quote
+    cursor++;
+  }
+
+  if (*cursor == ',') {
+    cursor++;
+  }
+}</code></pre>
+
+      <p class="note">
+        <strong>Calculator connection:</strong> after splitting, the row-processing code can say
+        <code>fields[4]</code> for the model and <code>fields[9]</code> for output tokens. That is much
+        clearer than manually counting commas every time.
+      </p>
+    </section>
+
+    <section id="dates">
+      <h2>11. Dates and Filtering</h2>
+      <p>
+        The date text looks long, but the calculator only needs year and month:
+        <code>2026-06-18T03:24:40.767Z</code>.
+      </p>
+
+      <h3>Tiny complete program: parse year, month, and day</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  const char *date_text = "2026-06-18T03:24:40.767Z";
+  int year = 0;
+  int month = 0;
+  int day = 0;
+
+  int parsed = sscanf(date_text, "%d-%d-%d", &amp;year, &amp;month, &amp;day);
+
+  if (parsed != 3) {
+    printf("Could not parse date\n");
+    return 1;
+  }
+
+  printf("year=%d month=%d day=%d\n", year, month, day);
+
+  if (year == 2026 && month == 6) {
+    printf("This row belongs in the June 2026 report\n");
+  }
+
+  return 0;
+}</code></pre>
+
+      <h3>Expected output</h3>
+      <pre><code>year=2026 month=6 day=18
+This row belongs in the June 2026 report</code></pre>
+
+      <p>
+        The format string <code>"%d-%d-%d"</code> reads three integers separated by hyphens. It stops
+        after the day because the format string does not ask for the time portion.
+      </p>
+
+      <h3>Row filter pattern</h3>
+      <pre><code>if (year != filter_year || month != filter_month) {
+  continue;
+}</code></pre>
+
+      <p>
+        In a loop, <code>continue</code> means "skip the rest of this loop body and move to the next
+        row." That is perfect for ignoring rows from the wrong month.
+      </p>
+    </section>
+
+    <section id="numbers">
+      <h2>12. Converting Token Fields from Text to Numbers</h2>
+      <p>
+        CSV fields are text. The token field <code>"90000"</code> is not a number until you convert it.
+        Use <code>strtol</code> from <code>&lt;stdlib.h&gt;</code> to convert string text to a
+        <code>long</code>.
+      </p>
+
+      <h3>Tiny complete program: parse token counts</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void) {
+  const char *cache_read_text = "90000";
+  long cache_read = strtol(cache_read_text, NULL, 10);
+
+  printf("cache_read = %ld\n", cache_read);
+  printf("double it = %ld\n", cache_read * 2);
+
+  return 0;
+}</code></pre>
+
+      <h3>Expected output</h3>
+      <pre><code>cache_read = 90000
+double it = 180000</code></pre>
+
+      <h3>Why <code>long</code>?</h3>
+      <p>
+        Token counts can become large. A <code>long</code> gives you more room than an <code>int</code>
+        on typical 64-bit systems. Use <code>%ld</code> when printing a <code>long</code>.
+      </p>
+
+      <p class="warning">
+        If a field is empty, <code>strtol("", NULL, 10)</code> returns <code>0</code>. That is useful
+        for this project, because an empty token field can reasonably mean no tokens for that category.
+      </p>
+    </section>
+
+    <section id="cost">
+      <h2>13. Cost Math</h2>
+      <p>
+        Model prices are given as dollars per million tokens. That means this:
+      </p>
+
+      <pre><code>cost = tokens * price_per_million / 1000000.0</code></pre>
+
+      <p>
+        The <code>.0</code> matters because it makes the division floating-point division. Since
+        <code>cost</code> is a <code>double</code>, keep the formula in <code>double</code> math.
+      </p>
+
+      <h3>Tiny complete program: calculate one row</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+
+typedef struct {
+  double input_no_cache;
+  double input_cache_write;
+  double input_cache_read;
+  double output;
+} Pricing;
+
+int main(void) {
+  Pricing composer = {
+      .input_no_cache = 3.00,
+      .input_cache_write = 3.00,
+      .input_cache_read = 0.50,
+      .output = 15.00,
+  };
+
+  long cache_write = 1200;
+  long no_cache = 3400;
+  long cache_read = 90000;
+  long output = 500;
+
+  double cost = (cache_write * composer.input_cache_write
+               + no_cache * composer.input_no_cache
+               + cache_read * composer.input_cache_read
+               + output * composer.output) / 1000000.0;
+
+  printf("row cost = $%.4f\n", cost);
+
+  return 0;
+}</code></pre>
+
+      <h3>Expected output</h3>
+      <pre><code>row cost = $0.0663</code></pre>
+
+      <h3>Long-context pricing</h3>
+      <p>
+        Some models have a higher price when one event uses more than a certain number of input
+        tokens. For <code>gpt-5.5-medium</code>, if
+        <code>cache_write + no_cache + cache_read</code> is greater than <code>272000</code>, use the
+        long-context rates for that one row.
+      </p>
+
+      <pre><code>long total_input = cache_write + no_cache + cache_read;
+
+if (total_input &gt; 272000) {
+  printf("Use long-context rates for this row\n");
+}</code></pre>
+
+      <p>
+        Do not apply the surcharge to the whole month just because one row crosses the threshold.
+        Decide row by row.
+      </p>
+    </section>
+
+    <section id="aggregation">
+      <h2>14. Aggregation: Add Many Rows into Per-Model Totals</h2>
+      <p>
+        The CSV has many rows. The report should not print one line per CSV row. It should print one
+        line per model. That means you need running totals.
+      </p>
+
+      <h3>Stats struct</h3>
+      <pre><code>typedef struct {
+  char name[64];
+  int events;
+  long cache_write;
+  long no_cache;
+  long cache_read;
+  long output;
+  double cost;
+} ModelStats;</code></pre>
+
+      <h3>Tiny complete program: add rows by model</h3>
+      <pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+typedef struct {
+  char name[64];
+  int events;
+  double cost;
+} ModelStats;
+
+int main(void) {
+  ModelStats stats[8] = {0};
+  int stats_count = 0;
+
+  const char *model_name = "composer-2.5-fast";
+  double row_cost = 0.0663;
+
+  int found = -1;
+  for (int i = 0; i &lt; stats_count; i++) {
+    if (strcmp(stats[i].name, model_name) == 0) {
+      found = i;
+      break;
+    }
+  }
+
+  if (found == -1) {
+    found = stats_count;
+    stats_count++;
+    strncpy(stats[found].name, model_name, sizeof(stats[found].name) - 1);
+    stats[found].name[sizeof(stats[found].name) - 1] = '\0';
+  }
+
+  stats[found].events++;
+  stats[found].cost += row_cost;
+
+  printf("%s: %d event, $%.4f\n",
+         stats[found].name, stats[found].events, stats[found].cost);
+
+  return 0;
+}</code></pre>
+
+      <h3>Why initialize with <code>{0}</code>?</h3>
+      <p>
+        <code>ModelStats stats[8] = {0};</code> starts the array with zeros. That means event counts,
+        token counts, costs, and the first character of each name all begin empty.
+      </p>
+
+      <p class="note">
+        <strong>Calculator connection:</strong> every matching CSV row goes through this same pattern:
+        find the model's stats row, create one if needed, then add this row's numbers to it.
+      </p>
+    </section>
+
+    <section id="sorting">
+      <h2>15. Sorting: Optional Report Polish with <code>qsort</code></h2>
+      <p>
+        Sorting is not required for a correct calculator. It only makes the final report nicer by
+        putting the highest-cost model first.
+      </p>
+
+      <h3>Comparator shape</h3>
+      <pre><code>int compare_by_cost(const void *left, const void *right) {
+  const ModelStats *a = left;
+  const ModelStats *b = right;
+
+  if (a-&gt;cost &lt; b-&gt;cost) {
+    return 1;
+  }
+  if (a-&gt;cost &gt; b-&gt;cost) {
+    return -1;
+  }
+  return 0;
+}</code></pre>
+
+      <h3>Calling <code>qsort</code></h3>
+      <pre><code>qsort(stats, stats_count, sizeof(stats[0]), compare_by_cost);</code></pre>
+
+      <p>
+        The comparator receives <code>void *</code> pointers because <code>qsort</code> is generic.
+        You convert them back to <code>ModelStats *</code> so you can read the <code>cost</code> field.
+      </p>
+
+      <p class="warning">
+        Add sorting after the unsorted report is correct. Sorting can hide aggregation bugs because
+        the rows move around.
+      </p>
+    </section>
+
+    <section id="build-order">
+      <h2>16. Recommended Build Order</h2>
+      <p>
+        Build this in small working stages. Each stage should compile and prove one new thing.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th class="num">Stage</th>
+            <th>Goal</th>
+            <th>Temporary output that proves it works</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">1</td>
+            <td>Open the CSV and count lines.</td>
+            <td><code>Read 141 lines</code> or whatever your export contains.</td>
+          </tr>
+          <tr>
+            <td class="num">2</td>
+            <td>Skip the header row.</td>
+            <td>The first printed row starts with a real date, not column names.</td>
+          </tr>
+          <tr>
+            <td class="num">3</td>
+            <td>Split one hard-coded CSV line.</td>
+            <td><code>model=composer-2.5-fast output=500</code>.</td>
+          </tr>
+          <tr>
+            <td class="num">4</td>
+            <td>Split real file rows.</td>
+            <td>Print <code>fields[0]</code>, <code>fields[4]</code>, and <code>fields[9]</code>.</td>
+          </tr>
+          <tr>
+            <td class="num">5</td>
+            <td>Parse dates and filter by month.</td>
+            <td>Print a count of rows matching <code>2026-06</code>.</td>
+          </tr>
+          <tr>
+            <td class="num">6</td>
+            <td>Look up pricing by model name.</td>
+            <td>Print model plus one rate, such as output price.</td>
+          </tr>
+          <tr>
+            <td class="num">7</td>
+            <td>Convert token fields and calculate one row cost.</td>
+            <td>Print <code>row cost = ...</code> with several decimals.</td>
+          </tr>
+          <tr>
+            <td class="num">8</td>
+            <td>Aggregate per model.</td>
+            <td>Print each model's events and total cost.</td>
+          </tr>
+          <tr>
+            <td class="num">9</td>
+            <td>Use command-line arguments.</td>
+            <td>The same executable works with different paths/months.</td>
+          </tr>
+          <tr>
+            <td class="num">10</td>
+            <td>Sort and format the final report.</td>
+            <td>The report is readable and sorted by cost.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Compile often</h3>
+      <pre><code>make aiTokenCostCalculator.exe</code></pre>
+
+      <h3>Run often</h3>
+      <pre><code>./build/aiTokenCostCalculator.exe ~/Downloads/usage-events-2026-06-18.csv 2026 6</code></pre>
+
+      <p class="checkpoint">
+        If a stage fails, stop there. Do not add the next feature until the current feature produces
+        a believable temporary print.
+      </p>
+    </section>
+
+    <section id="debugging">
+      <h2>17. Debugging Checklist</h2>
+      <p>
+        Debug from the outside inward. First prove the file is being read. Then prove fields are
+        split. Then prove dates, numbers, pricing, and totals.
+      </p>
+
+      <h3>Temporary prints worth using</h3>
+      <pre><code>printf("raw line: %s", line);
+printf("field_count=%d\n", field_count);
+printf("date=[%s] model=[%s] output=[%s]\n", fields[0], fields[4], fields[9]);
+printf("year=%d month=%d\n", year, month);
+printf("cw=%ld nc=%ld cr=%ld out=%ld\n",
+       cache_write, no_cache, cache_read, output);
+printf("row cost = %.8f\n", cost);</code></pre>
+
+      <h3>Common bug patterns</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Symptom</th>
+            <th>Likely cause</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Program cannot open the file.</td>
+            <td>The path is wrong, quoted incorrectly, or the file is not where you think it is.</td>
+          </tr>
+          <tr>
+            <td>First row fails date parsing.</td>
+            <td>You forgot to skip the header.</td>
+          </tr>
+          <tr>
+            <td>Model lookup always fails.</td>
+            <td>The model field still has quotes, spaces, or a newline.</td>
+          </tr>
+          <tr>
+            <td>Costs are zero or too small.</td>
+            <td>Token fields were not converted correctly, or integer division slipped into the formula.</td>
+          </tr>
+          <tr>
+            <td>Month filter finds no rows.</td>
+            <td>The parsed month is wrong, the requested month is wrong, or date parsing failed.</td>
+          </tr>
+          <tr>
+            <td>Duplicate model rows appear.</td>
+            <td>The aggregation lookup is not finding an existing stats row before appending.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="note">
+        <strong>Debugging habit:</strong> print values in square brackets, like
+        <code>model=[%s]</code>. That makes hidden spaces, empty strings, and leftover quotes easier
+        to see.
+      </p>
+    </section>
+
+    <section id="reference">
+      <h2>18. Pricing Reference</h2>
+      <p>
+        These are the model slugs and rates used by the reference implementation. Prices are dollars
+        per one million tokens.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Model slug</th>
+            <th class="num">Input</th>
+            <th class="num">Cache write</th>
+            <th class="num">Cache read</th>
+            <th class="num">Output</th>
+            <th>Long context</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>composer-2.5-fast</code></td>
+            <td class="num">3.00</td>
+            <td class="num">3.00</td>
+            <td class="num">0.50</td>
+            <td class="num">15.00</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><code>gpt-5.5-medium</code></td>
+            <td class="num">5.00</td>
+            <td class="num">5.00</td>
+            <td class="num">0.50</td>
+            <td class="num">30.00</td>
+            <td>Above 272,000 input tokens: 10.00 input/cache write, 1.00 cache read, 45.00 output.</td>
+          </tr>
+          <tr>
+            <td><code>claude-fable-5-thinking-medium</code></td>
+            <td class="num">10.00</td>
+            <td class="num">12.50</td>
+            <td class="num">1.00</td>
+            <td class="num">50.00</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><code>claude-opus-4-8</code></td>
+            <td class="num">5.00</td>
+            <td class="num">6.25</td>
+            <td class="num">0.50</td>
+            <td class="num">25.00</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><code>claude-opus-4-8-thinking-high</code></td>
+            <td class="num">5.00</td>
+            <td class="num">6.25</td>
+            <td class="num">0.50</td>
+            <td class="num">25.00</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><code>claude-opus-4-8-thinking-medium</code></td>
+            <td class="num">5.00</td>
+            <td class="num">6.25</td>
+            <td class="num">0.50</td>
+            <td class="num">25.00</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><code>claude-opus-4-8-thinking-low</code></td>
+            <td class="num">5.00</td>
+            <td class="num">6.25</td>
+            <td class="num">0.50</td>
+            <td class="num">25.00</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><code>claude-opus-4-8-fast</code></td>
+            <td class="num">10.00</td>
+            <td class="num">12.50</td>
+            <td class="num">1.00</td>
+            <td class="num">50.00</td>
+            <td>None</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Reference solution policy</h3>
+      <p>
+        <code>aiTokenCostCalculator.example.c</code> is there when you are stuck, but it is not the
+        first teacher. Try to make your own stage work, compare only the piece you are stuck on, then
+        return to your file and rewrite the idea in your own words.
+      </p>
+    </section>
+
+    <footer>
+      When you get stuck, ask for a hint for the exact stage you are on: file reading, splitting,
+      date filtering, pricing lookup, cost math, aggregation, or report formatting.
+    </footer>
+  </div>
+</body>
+</html>
