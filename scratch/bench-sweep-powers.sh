@@ -63,7 +63,7 @@ fi
 L2_KIB=${L2_KIB:-512}           # per physical core; 3900X=512, Xeon 6230=1024
 SEGMENT_KIB=${SEGMENT_KIB:-512} # optimized version @ 1ULL << 22 odd slots
 OVERHEAD_KIB=${OVERHEAD_KIB:-32}
-RUNS=${RUNS:-1}                 # timed runs per point (best of last two kept)
+RUNS=${RUNS:-2}                 # timed runs per point (best of last two kept)
 
 echo "Building (via Makefile: -O3 -march=native)..." >&2
 make "${ORIG#./}" "${BIT#./}" "${BLK#./}" "${OPT#./}"
