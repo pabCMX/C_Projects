@@ -186,6 +186,8 @@ static const char ERRORED_FIELD[32] = "Errored, No Charge";
 
 static const int FALLBACK_MODEL_INDEX = 26;
 
+#define MAX_MODELS 32
+
 static long parse_field_as_long(char *field) {
   return strtol(field, NULL, 10);
 }
@@ -286,8 +288,6 @@ static double calculate_row_cost(char *fields[], const ModelPricing *pricing) {
     return cost += (output * pricing->rates.output) / Mil;
   }
 }
-
-#define MAX_MODELS 32
 
 static int accumulate_stats_from_row(ModelStats *stats, char *fields[], int *stats_count) {
   // We create a found index to set data.
