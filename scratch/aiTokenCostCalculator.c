@@ -36,11 +36,36 @@ typedef struct {
 } Suffixes;
 
 static const ModelPricing MODEL_PRICING[] = {
+    {.name  = "composer-2.5",
+     .rates = {.input_no_cache    = 0.50,
+               .input_cache_write = 0.50,
+               .input_cache_read  = 0.20,
+               .output            = 2.50}},
     {.name  = "composer-2.5-fast",
      .rates = {.input_no_cache    = 3.00,
                .input_cache_write = 3.00,
                .input_cache_read  = 0.50,
                .output            = 15.00}},
+    {.name  = "composer-2",
+     .rates = {.input_no_cache    = 0.50,
+               .input_cache_write = 0.50,
+               .input_cache_read  = 0.20,
+               .output            = 2.50}},
+    {.name  = "composer-2-fast",
+     .rates = {.input_no_cache    = 1.50,
+               .input_cache_write = 1.50,
+               .input_cache_read  = 0.35,
+               .output            = 7.50}},
+    {.name  = "composer-1.5",
+     .rates = {.input_no_cache    = 3.50,
+               .input_cache_write = 3.50,
+               .input_cache_read  = 0.35,
+               .output            = 17.50}},
+    {.name  = "composer-1",
+     .rates = {.input_no_cache    = 1.25,
+               .input_cache_write = 1.25,
+               .input_cache_read  = 0.125,
+               .output            = 10.00}},
     {.name  = "gpt-5.5",
      .rates = {.input_no_cache         = 3.00,
                .input_cache_write      = 3.00,
@@ -56,6 +81,46 @@ static const ModelPricing MODEL_PRICING[] = {
                .input_cache_write = 12.50,
                .input_cache_read  = 1.25,
                .output            = 75.00}},
+    {.name  = "gpt-5.4",
+     .rates = {.input_no_cache    = 2.5,
+               .input_cache_write = 2.5,
+               .input_cache_read  = 0.25,
+               .output            = 15.00}},
+    {.name  = "gpt-5.3-codex",
+     .rates = {.input_no_cache    = 1.75,
+               .input_cache_write = 1.75,
+               .input_cache_read  = 0.175,
+               .output            = 14.00}},
+    {.name  = "gpt-5.3-codex-fast",
+     .rates = {.input_no_cache    = 3.50,
+               .input_cache_write = 3.50,
+               .input_cache_read  = 0.35,
+               .output            = 28.00}},
+    {.name  = "gpt-5.2",
+     .rates = {.input_no_cache    = 1.75,
+               .input_cache_write = 1.75,
+               .input_cache_read  = 0.175,
+               .output            = 14.00}},
+    {.name  = "gpt-5.2-fast",
+     .rates = {.input_no_cache    = 3.50,
+               .input_cache_write = 3.50,
+               .input_cache_read  = 0.35,
+               .output            = 28.00}},
+    {.name  = "gpt-5.2-codex",
+     .rates = {.input_no_cache    = 1.75,
+               .input_cache_write = 1.75,
+               .input_cache_read  = 0.175,
+               .output            = 14.00}},
+    {.name  = "gpt-5.1-codex-max",
+     .rates = {.input_no_cache    = 1.25,
+               .input_cache_write = 1.25,
+               .input_cache_read  = 0.125,
+               .output            = 10.00}},
+    {.name  = "gpt-5.1-codex-mini",
+     .rates = {.input_no_cache    = 0.25,
+               .input_cache_write = 0.25,
+               .input_cache_read  = 0.025,
+               .output            = 2.00}},
     {.name  = "claude-opus-4-8",
      .rates = {.input_no_cache    = 5.00,
                .input_cache_write = 6.25,
@@ -66,7 +131,27 @@ static const ModelPricing MODEL_PRICING[] = {
                .input_cache_write = 12.50,
                .input_cache_read  = 1.00,
                .output            = 50.00}},
+    {.name  = "claude-4.6-opus",
+     .rates = {.input_no_cache    = 5.00,
+               .input_cache_write = 6.25,
+               .input_cache_read  = 0.50,
+               .output            = 25.00}},
+    {.name  = "claude-4.6-opus-fast",
+     .rates = {.input_no_cache    = 30.00,
+               .input_cache_write = 37.50,
+               .input_cache_read  = 3.00,
+               .output            = 150.00}},
+    {.name  = "claude-4.5-opus",
+     .rates = {.input_no_cache    = 5.00,
+               .input_cache_write = 6.25,
+               .input_cache_read  = 0.50,
+               .output            = 25.00}},
     {.name  = "claude-4.6-sonnet",
+     .rates = {.input_no_cache    = 3.00,
+               .input_cache_write = 3.75,
+               .input_cache_read  = 0.30,
+               .output            = 15.00}},
+    {.name  = "claude-4.5-sonnet",
      .rates = {.input_no_cache    = 3.00,
                .input_cache_write = 3.75,
                .input_cache_read  = 0.30,
@@ -76,6 +161,16 @@ static const ModelPricing MODEL_PRICING[] = {
                .input_cache_write = 12.50,
                .input_cache_read  = 1.00,
                .output            = 50.00}},
+    {.name  = "gemini-3-pro-preview",
+     .rates = {.input_no_cache    = 2.00,
+               .input_cache_write = 2.00,
+               .input_cache_read  = 0.20,
+               .output            = 12.00}},
+    {.name  = "kimi-k2.5",
+     .rates = {.input_no_cache    = 0.60,
+               .input_cache_write = 0.60,
+               .input_cache_read  = 0.10,
+               .output            = 3.00}},
     {.name  = "auto",
      .rates = {.input_no_cache    = 0.50,
                .input_cache_write = 0.50,
@@ -86,6 +181,10 @@ static const ModelPricing MODEL_PRICING[] = {
 static const Suffixes REASONING_SUFFIXES[] = {{.suffix = "-xhigh"},  {.suffix = "-high"},
                                               {.suffix = "-medium"}, {.suffix = "-low"},
                                               {.suffix = "-none"},   {.suffix = "-thinking"}};
+
+static const char ERRORED_FIELD[32] = "Errored, No Charge";
+
+static const int FALLBACK_MODEL_INDEX = 26;
 
 static long parse_field_as_long(char *field) {
   return strtol(field, NULL, 10);
@@ -159,7 +258,7 @@ static const ModelPricing *find_pricing(const char *model_name) {
     }
   }
   // If we don't find it, we return the auto pricing.
-  return &MODEL_PRICING[7];
+  return &MODEL_PRICING[FALLBACK_MODEL_INDEX];
 }
 
 static double calculate_row_cost(char *fields[], const ModelPricing *pricing) {
@@ -187,6 +286,8 @@ static double calculate_row_cost(char *fields[], const ModelPricing *pricing) {
     return cost += (output * pricing->rates.output) / Mil;
   }
 }
+
+#define MAX_MODELS 32
 
 static int accumulate_stats_from_row(ModelStats *stats, char *fields[], int *stats_count) {
   // We create a found index to set data.
@@ -275,6 +376,18 @@ static int split_csv_line(char *line, char *fields[], int max_fields) {
   return count;
 }
 
+static int compare_stats_by_cost(const void *left, const void *right) {
+  const ModelStats *a = left;
+  const ModelStats *b = right;
+  if (a->cost < b->cost) {
+    return 1;
+  }
+  if (a->cost > b->cost) {
+    return -1;
+  }
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
 
   if (argc < 2) {
@@ -286,7 +399,7 @@ int main(int argc, char *argv[]) {
   char       line[8192];
   char      *fields[32];
   int        field_count       = 0;
-  ModelStats stats[16]         = {0};
+  ModelStats stats[MAX_MODELS] = {0};
   int        stats_count       = 0;
   double     total_cost        = 0;
   long       total_no_cache    = 0;
@@ -316,16 +429,25 @@ int main(int argc, char *argv[]) {
     if (field_count != 12) {
       printf("Error reading line, bad field number:");
       printf("%s", line);
+      continue;
     }
-
+    // First check if field[3] is errored or not.
+    if (strcmp(fields[3], ERRORED_FIELD) == 0) {
+      // Just skip it.
+      continue;
+    }
     // We start with the stats struct, all the current fields, and a pointer to the total stats
     // index
     accumulate_stats_from_row(stats, fields, &stats_count);
   }
+  fclose(input);
 
+  // Now we sort the stats by cost.
+  qsort(stats, (size_t)stats_count, sizeof(ModelStats), compare_stats_by_cost);
+
+  // Now we print the stats starting with the header.
   printf("%-32s %12s %12s %12s %12s %12s\n", "Model", "Input Tks", "Cache Writes", "Cache Read",
          "Output", "Cost");
-
   for (int i = 0; i < stats_count; i++) {
     total_cost += stats[i].cost;
     total_no_cache += stats[i].no_cache;
@@ -337,7 +459,6 @@ int main(int argc, char *argv[]) {
   }
   printf("%-32s %12ld %12ld %12ld %12ld %12.2f\n", "Total", total_no_cache, total_cache_write,
          total_cache_read, total_output, total_cost);
-  fclose(input);
 
   return 0;
 }
