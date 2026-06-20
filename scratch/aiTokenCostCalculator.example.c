@@ -5,7 +5,7 @@
 // as a guide. Peek here only when stuck.
 //
 // Build (example only):
-//   gcc -std=c23 -Wall -Wextra -pedantic -g aiTokenCostCalculator.example.c \
+//   gcc -std=c23 -Wall -Wextra -pedantic -g aiTokenCostCalculator.example.c
 //     -o build/aiTokenCostCalculator.example.exe
 //
 // Usage:
@@ -15,10 +15,10 @@
 #include <string.h>
 #include <time.h>
 
-#define LINE_MAX   8192
-#define FIELD_MAX  32
-#define NAME_MAX   64
-#define MODEL_MAX  16
+#define LINE_MAX 8192
+#define FIELD_MAX 32
+#define NAME_MAX 64
+#define MODEL_MAX 16
 
 typedef struct {
   double input_no_cache;
@@ -33,8 +33,8 @@ typedef struct {
 } Pricing;
 
 typedef struct {
-  char name[NAME_MAX];
-  char api_label[NAME_MAX];
+  char    name[NAME_MAX];
+  char    api_label[NAME_MAX];
   Pricing rates;
 } ModelPricing;
 
@@ -51,96 +51,96 @@ typedef struct {
 
 static const ModelPricing MODEL_PRICING[] = {
     {
-        .name = "composer-2.5-fast",
+        .name      = "composer-2.5-fast",
         .api_label = "Cursor Composer 2.5 Fast",
         .rates =
             {
-                .input_no_cache = 3.00,
+                .input_no_cache    = 3.00,
                 .input_cache_write = 3.00,
-                .input_cache_read = 0.50,
-                .output = 15.00,
+                .input_cache_read  = 0.50,
+                .output            = 15.00,
             },
     },
     {
-        .name = "gpt-5.5-medium",
+        .name      = "gpt-5.5-medium",
         .api_label = "OpenAI gpt-5.5",
         .rates =
             {
-                .input_no_cache = 5.00,
-                .input_cache_write = 5.00,
-                .input_cache_read = 0.50,
-                .output = 30.00,
+                .input_no_cache         = 3.00,
+                .input_cache_write      = 3.00,
+                .input_cache_read       = 0.50,
+                .output                 = 15.00,
                 .long_context_threshold = 272000L,
-                .long_input_no_cache = 10.00,
+                .long_input_no_cache    = 10.00,
                 .long_input_cache_write = 10.00,
-                .long_input_cache_read = 1.00,
-                .long_output = 45.00,
+                .long_input_cache_read  = 1.00,
+                .long_output            = 45.00,
             },
     },
     {
-        .name = "claude-fable-5-thinking-medium",
+        .name      = "claude-fable-5-thinking-medium",
         .api_label = "Anthropic Claude Fable 5",
         .rates =
             {
-                .input_no_cache = 10.00,
+                .input_no_cache    = 10.00,
                 .input_cache_write = 12.50,
-                .input_cache_read = 1.00,
-                .output = 50.00,
+                .input_cache_read  = 1.00,
+                .output            = 50.00,
             },
     },
     {
-        .name = "claude-opus-4-8",
+        .name      = "claude-opus-4-8",
         .api_label = "Anthropic Claude Opus 4.8",
         .rates =
             {
-                .input_no_cache = 5.00,
+                .input_no_cache    = 5.00,
                 .input_cache_write = 6.25,
-                .input_cache_read = 0.50,
-                .output = 25.00,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
             },
     },
     {
-        .name = "claude-opus-4-8-thinking-high",
+        .name      = "claude-opus-4-8-thinking-high",
         .api_label = "Anthropic Claude Opus 4.8 (high thinking)",
         .rates =
             {
-                .input_no_cache = 5.00,
+                .input_no_cache    = 5.00,
                 .input_cache_write = 6.25,
-                .input_cache_read = 0.50,
-                .output = 25.00,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
             },
     },
     {
-        .name = "claude-opus-4-8-thinking-medium",
+        .name      = "claude-opus-4-8-thinking-medium",
         .api_label = "Anthropic Claude Opus 4.8 (medium thinking)",
         .rates =
             {
-                .input_no_cache = 5.00,
+                .input_no_cache    = 5.00,
                 .input_cache_write = 6.25,
-                .input_cache_read = 0.50,
-                .output = 25.00,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
             },
     },
     {
-        .name = "claude-opus-4-8-thinking-low",
+        .name      = "claude-opus-4-8-thinking-low",
         .api_label = "Anthropic Claude Opus 4.8 (low thinking)",
         .rates =
             {
-                .input_no_cache = 5.00,
+                .input_no_cache    = 5.00,
                 .input_cache_write = 6.25,
-                .input_cache_read = 0.50,
-                .output = 25.00,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
             },
     },
     {
-        .name = "claude-opus-4-8-fast",
+        .name      = "claude-opus-4-8-fast",
         .api_label = "Anthropic Claude Opus 4.8 Fast mode",
         .rates =
             {
-                .input_no_cache = 10.00,
+                .input_no_cache    = 10.00,
                 .input_cache_write = 12.50,
-                .input_cache_read = 1.00,
-                .output = 50.00,
+                .input_cache_read  = 1.00,
+                .output            = 50.00,
             },
     },
 };
@@ -154,7 +154,7 @@ static void trim_quotes(char *field) {
 }
 
 static int split_csv_line(char *line, char *fields[], int max_fields) {
-  int count = 0;
+  int   count  = 0;
   char *cursor = line;
 
   while (*cursor != '\0' && count < max_fields) {
@@ -196,7 +196,7 @@ static int split_csv_line(char *line, char *fields[], int max_fields) {
 }
 
 static long parse_token_count(const char *field) {
-  char buffer[64];
+  char   buffer[64];
   size_t i = 0;
 
   while (field[i] != '\0' && i + 1 < sizeof(buffer)) {
@@ -249,7 +249,8 @@ static ModelStats *find_or_add_stats(ModelStats stats[], int *stats_count, const
   return slot;
 }
 
-static int uses_long_context(const Pricing *rates, long cache_write, long no_cache, long cache_read) {
+static int uses_long_context(const Pricing *rates, long cache_write, long no_cache,
+                             long cache_read) {
   if (rates->long_context_threshold <= 0L) {
     return 0;
   }
@@ -282,8 +283,8 @@ static void print_usage(const char *program_name) {
 }
 
 static void get_current_year_month(int *year, int *month) {
-  time_t now = time(NULL);
-  struct tm  local_time;
+  time_t    now = time(NULL);
+  struct tm local_time;
 
 #if defined(_WIN32)
   localtime_s(&local_time, &now);
@@ -291,7 +292,7 @@ static void get_current_year_month(int *year, int *month) {
   localtime_r(&now, &local_time);
 #endif
 
-  *year = local_time.tm_year + 1900;
+  *year  = local_time.tm_year + 1900;
   *month = local_time.tm_mon + 1;
 }
 
@@ -319,7 +320,7 @@ int main(int argc, char *argv[]) {
   int         filter_month;
 
   if (argc == 4) {
-    filter_year = atoi(argv[2]);
+    filter_year  = atoi(argv[2]);
     filter_month = atoi(argv[3]);
   } else if (argc == 2) {
     get_current_year_month(&filter_year, &filter_month);
@@ -347,10 +348,10 @@ int main(int argc, char *argv[]) {
   }
 
   ModelStats stats[MODEL_MAX];
-  int        stats_count = 0;
+  int        stats_count    = 0;
   int        matched_events = 0;
   int        unknown_models = 0;
-  double     total_cost = 0.0;
+  double     total_cost     = 0.0;
 
   while (fgets(line, sizeof(line), input) != NULL) {
     char *fields[FIELD_MAX];
@@ -364,9 +365,9 @@ int main(int argc, char *argv[]) {
       trim_quotes(fields[i]);
     }
 
-    int year = 0;
+    int year  = 0;
     int month = 0;
-    int day = 0;
+    int day   = 0;
     if (!parse_iso_date(fields[0], &year, &month, &day)) {
       continue;
     }
@@ -375,19 +376,19 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
-    const char *model_name = fields[4];
-    const ModelPricing *pricing = find_pricing(model_name);
+    const char         *model_name = fields[4];
+    const ModelPricing *pricing    = find_pricing(model_name);
     if (pricing == NULL) {
       unknown_models++;
       continue;
     }
 
     long cache_write = parse_token_count(fields[6]);
-    long no_cache = parse_token_count(fields[7]);
-    long cache_read = parse_token_count(fields[8]);
-    long output = parse_token_count(fields[9]);
+    long no_cache    = parse_token_count(fields[7]);
+    long cache_read  = parse_token_count(fields[8]);
+    long output      = parse_token_count(fields[9]);
 
-    int long_context = 0;
+    int    long_context = 0;
     double cost =
         event_cost(&pricing->rates, cache_write, no_cache, cache_read, output, &long_context);
 
@@ -437,9 +438,9 @@ int main(int argc, char *argv[]) {
          "-----------", "-----------", "---------", "----------", "-------");
 
   for (int i = 0; i < stats_count; i++) {
-    const ModelStats *row = &stats[i];
+    const ModelStats   *row     = &stats[i];
     const ModelPricing *pricing = find_pricing(row->name);
-    double share = total_cost > 0.0 ? (row->cost / total_cost) * 100.0 : 0.0;
+    double              share   = total_cost > 0.0 ? (row->cost / total_cost) * 100.0 : 0.0;
 
     char no_cache_buf[16];
     char cache_read_buf[16];
@@ -461,7 +462,7 @@ int main(int argc, char *argv[]) {
   printf("\nPricing notes:\n");
   for (size_t i = 0; i < sizeof(MODEL_PRICING) / sizeof(MODEL_PRICING[0]); i++) {
     const ModelPricing *entry = &MODEL_PRICING[i];
-    int seen = 0;
+    int                 seen  = 0;
 
     for (int j = 0; j < stats_count; j++) {
       if (strcmp(stats[j].name, entry->name) == 0) {
