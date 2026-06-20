@@ -1,0 +1,24 @@
+{
+  "format_on_save": "on",
+  "languages": {
+    "C": {
+      "formatter": {
+        "external": {
+          "command": "clang-format",
+          "arguments": ["-assume-filename", "{buffer_path}"]
+        }
+      }
+    }
+  },
+  "lsp": {
+    "clangd": {
+      "binary": {
+        "arguments": [
+          "--background-index",
+          "--clang-tidy",
+          "--query-driver=/usr/bin/gcc,/usr/bin/g++,/usr/bin/x86_64-linux-gnu-gcc,C:/msys64/**/gcc.exe,C:/msys64/**/g++.exe,D:/msys64/**/gcc.exe,D:/msys64/**/g++.exe"
+        ]
+      }
+    }
+  }
+}

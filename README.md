@@ -165,61 +165,26 @@ clean:
 This repo includes configuration files for consistent code style and editor intelligence:
 
 - **`.clang-format`** – Defines code formatting rules (indentation, braces, spacing)
-- **`.clangd`** – Configures the language server for linting and code navigation
+- **`.clangd`** – Shared compile flags (`-std=c23`, `-Wall`, etc.); no machine-specific include paths
+- **`.vscode/settings.json`** – Cursor/VS Code format-on-save and clangd `--query-driver` allowlist
+- **`.zed/settings.json`** – Zed format-on-save and the same `--query-driver` allowlist
+
+### Cross-platform system headers
+
+`.clangd` does not support “if Linux / if Windows” blocks — only path-based `If` conditions. Instead, clangd **asks your local GCC** where its system headers live via `--query-driver`. That list lives in `.vscode/settings.json` and `.zed/settings.json`, covering typical Linux (`/usr/bin/gcc`) and MSYS2 Windows (`C:/msys64/**/gcc.exe`) installs. No per-machine edits to `.clangd` are needed when switching machines.
+
+If your GCC lives elsewhere (custom install path, different MSYS drive letter), add a glob to the `--query-driver` value in those editor settings files.
 
 ### VS Code / Cursor Setup
 
-#### Formatting
-
-1. Install the **"C/C++"** extension (by Microsoft)
-2. Open Settings (`Ctrl+,`) and enable **"Editor: Format On Save"**
-3. The `.clang-format` file is automatically detected
-
-#### Linting (Clangd)
-
-1. Install the **"clangd"** extension (by LLVM)
-2. Disable the IntelliSense from the C/C++ extension to avoid conflicts:
-   - Open Settings → search for `C_Cpp.intelliSenseEngine`
-   - Set to **"disabled"**
-3. The `.clangd` file is automatically detected
-
-**settings.json** (optional explicit config):
-```json
-{
-  "editor.formatOnSave": true,
-  "C_Cpp.intelliSenseEngine": "disabled",
-  "clangd.path": "clangd",
-  "clangd.arguments": ["--background-index", "--clang-tidy"]
-}
-```
+1. Install **clangd** (LLVM extension)
+2. Install `clangd` and `clang-format` on your system (`apt install clangd clang-format` on Debian)
+3. Open the repo — `.vscode/settings.json` is picked up automatically (format on save, query-driver, Microsoft IntelliSense disabled)
 
 ### Zed Setup
 
-#### Formatting
-
-Add the following to your Zed `settings.json` (`Ctrl+,`):
-
-```json
-{
-  "format_on_save": "on",
-  "languages": {
-    "C": {
-      "formatter": {
-        "external": {
-          "command": "clang-format",
-          "arguments": ["-assume-filename", "{buffer_path}"]
-        }
-      }
-    }
-  }
-}
-```
-
-#### Linting (Clangd)
-
-Zed automatically detects and uses clangd when it's installed. The `.clangd` file in the repo is picked up automatically.
-
-**Note:** You may need to update the include paths in `.clangd` to match your system's GCC installation path.
+1. Install `clang-format` on your PATH (Zed can bundle clangd, or use a system install)
+2. Open the repo — `.zed/settings.json` and `.clangd` are picked up automatically
 
 ### Command Line
 

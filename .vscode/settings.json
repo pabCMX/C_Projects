@@ -1,0 +1,13 @@
+{
+  "editor.formatOnSave": true,
+  "[c]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "clangd.path": "clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--clang-tidy",
+    "--query-driver=/usr/bin/gcc,/usr/bin/g++,/usr/bin/x86_64-linux-gnu-gcc,C:/msys64/**/gcc.exe,C:/msys64/**/g++.exe,D:/msys64/**/gcc.exe,D:/msys64/**/g++.exe"
+  ]
+}
