@@ -1,6 +1,8 @@
-SUBDIRS := $(pathsubt %/Makefile,%,$(wildcard */Makefile))
+MAKEFLAGS += -s --no-print-directory
 
-.PHONY: all clean dirs
+SUBDIRS := $(patsubst %/Makefile,%,$(wildcard */Makefile))
+
+.PHONY: all clean $(SUBDIRS)
 
 # Default target: build everything in all subdirectories
 all: $(SUBDIRS)

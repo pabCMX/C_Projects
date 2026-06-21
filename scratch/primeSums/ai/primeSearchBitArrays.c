@@ -1,3 +1,7 @@
+#ifndef _WIN32
+#define _DEFAULT_SOURCE
+#endif
+
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -19,13 +23,14 @@
 __extension__ typedef unsigned __int128 u128;
 
 typedef struct {
-  uint64_t        end;
-  uint64_t        root;
-  uint64_t        segment_odd_count;
-  uint64_t        odd_index_limit;
-  const uint32_t *base_primes;
-  size_t          base_prime_count;
-  _Atomic int     failed;
+  uint64_t         end;
+  uint64_t         root;
+  uint64_t         segment_odd_count;
+  uint64_t         odd_index_limit;
+  const uint32_t  *base_primes;
+  size_t           base_prime_count;
+  _Atomic uint64_t next_odd_index;
+  _Atomic int      failed;
 } sieve_work_t;
 
 typedef struct {
@@ -36,8 +41,6 @@ typedef struct {
 typedef struct {
   sieve_work_t    *work;
   worker_result_t *result;
-  uint64_t         range_start;
-  uint64_t         range_end;
 } worker_arg_t;
 
 static uint64_t isqrt_u64(uint64_t n) {
@@ -135,124 +138,22 @@ static inline size_t bit_words_needed(size_t bit_count) {
   return (bit_count + 63u) / 64u;
 }
 
-/* 0 = prime candidate, 1 = composite. segment_odd_count is 2^21 (64-aligned). */
-static inline void bit_words_clear_all(uint64_t *words, size_t nwords) {
-  memset(words, 0, nwords * sizeof *words);
-}
+static inline void bit_words_set_all(uint64_t *words, size_t bit_count) {
+  const size_t nwords = bit_words_needed(bit_count);
+  memset(words, 0xFF, nwords * sizeof *words);
 
-static inline void bit_mark_composite(uint64_t *words, size_t i) {
-  words[i / 64] |= 1ull << (i % 64);
-}
-
-/* Inactive cursor: prime does not cross this thread's assigned range. */
-static const uint64_t cross_inactive = UINT64_MAX;
-
-static uint64_t first_cross_odd_index(uint64_t range_start_odd_index, uint64_t p) {
-  const uint64_t low       = 2 * range_start_odd_index + 1;
-  const uint64_t p_squared = p * p;
-
-  uint64_t start = ((low + p - 1) / p) * p;
-  if (start < p_squared) {
-    start = p_squared;
-  }
-  if ((start & 1) == 0) {
-    start += p;
-  }
-
-  return (start - 1) / 2;
-}
-
-static void init_cross_cursors(uint64_t range_start, uint64_t range_end,
-                               const uint32_t *base_primes, size_t base_prime_count,
-                               uint64_t *next_cross) {
-  const uint64_t range_end_exclusive = 2 * range_end + 1;
-
-  for (size_t i = 0; i < base_prime_count; ++i) {
-    const uint64_t p = base_primes[i];
-    if (p == 2) {
-      next_cross[i] = cross_inactive;
-      continue;
-    }
-
-    if (p * p >= range_end_exclusive) {
-      for (size_t j = i; j < base_prime_count; ++j) {
-        next_cross[j] = cross_inactive;
-      }
-      return;
-    }
-
-    const uint64_t first = first_cross_odd_index(range_start, p);
-    next_cross[i]        = first >= range_end ? cross_inactive : first;
+  const size_t extra = nwords * 64u - bit_count;
+  if (extra != 0) {
+    words[nwords - 1] &= ~0ull >> extra;
   }
 }
 
-static void sum_segment_primes(const uint64_t *words, size_t size, uint64_t low, u128 *sum_out,
-                               uint64_t *count_out) {
-  const size_t   nwords    = bit_words_needed(size);
-  const size_t   extra     = nwords * 64u - size;
-  const uint64_t tail_mask = extra == 0 ? ~0ull : (~0ull >> extra);
-
-  u128     sum         = 0;
-  uint64_t prime_count = 0;
-
-  for (size_t w = 0; w < nwords; ++w) {
-    uint64_t prime_bits = ~words[w];
-    if (w + 1 == nwords) {
-      prime_bits &= tail_mask;
-    }
-
-    while (prime_bits) {
-      const unsigned bit = (unsigned)__builtin_ctzll(prime_bits);
-      prime_bits &= prime_bits - 1;
-      const size_t offset = w * 64 + bit;
-      sum += (u128)(low + 2 * (uint64_t)offset);
-      ++prime_count;
-    }
-  }
-
-  *sum_out   = sum;
-  *count_out = prime_count;
+static inline void bit_word_clear(uint64_t *words, size_t i) {
+  words[i / 64] &= ~(1ull << (i % 64));
 }
 
-static void sieve_odd_segment(uint64_t low_index, uint64_t high_index, const uint32_t *base_primes,
-                              size_t base_prime_count, uint64_t *words, uint64_t *next_cross,
-                              u128 *sum_out, uint64_t *count_out) {
-  const size_t size = (size_t)(high_index - low_index);
-  if (size == 0) {
-    *sum_out   = 0;
-    *count_out = 0;
-    return;
-  }
-
-  const size_t nwords = bit_words_needed(size);
-  bit_words_clear_all(words, nwords);
-
-  const uint64_t low            = 2 * low_index + 1;
-  const uint64_t high_exclusive = 2 * high_index + 1;
-
-  for (size_t i = 0; i < base_prime_count; ++i) {
-    const uint64_t p = base_primes[i];
-    if (p == 2) {
-      continue;
-    }
-
-    const uint64_t p_squared = p * p;
-    if (p_squared >= high_exclusive) {
-      break;
-    }
-
-    uint64_t cross = next_cross[i];
-    if (cross == cross_inactive) {
-      continue;
-    }
-
-    for (; cross < high_index; cross += p) {
-      bit_mark_composite(words, (size_t)(cross - low_index));
-    }
-    next_cross[i] = cross;
-  }
-
-  sum_segment_primes(words, size, low, sum_out, count_out);
+static inline int bit_word_test(const uint64_t *words, size_t i) {
+  return (int)((words[i / 64] >> (i % 64)) & 1ull);
 }
 
 static size_t sieve_primes_upto(uint64_t limit, uint32_t **primes_out) {
@@ -308,6 +209,67 @@ static size_t sieve_primes_upto(uint64_t limit, uint32_t **primes_out) {
   return count;
 }
 
+static void sieve_odd_segment(uint64_t low_index, uint64_t high_index, const uint32_t *base_primes,
+                              size_t base_prime_count, uint64_t *is_prime, u128 *sum_out,
+                              uint64_t *count_out) {
+  const size_t size = (size_t)(high_index - low_index);
+  if (size == 0) {
+    *sum_out   = 0;
+    *count_out = 0;
+    return;
+  }
+
+  bit_words_set_all(is_prime, size);
+
+  const uint64_t low            = 2 * low_index + 1;
+  const uint64_t high_exclusive = 2 * high_index + 1;
+
+  for (size_t i = 0; i < base_prime_count; ++i) {
+    const uint64_t p = base_primes[i];
+    if (p == 2) {
+      continue;
+    }
+
+    const uint64_t p_squared = p * p;
+
+    if (p_squared >= high_exclusive) {
+      break;
+    }
+
+    uint64_t start = ((low + p - 1) / p) * p;
+    if (start < p_squared) {
+      start = p_squared;
+    }
+    if ((start & 1) == 0) {
+      start += p;
+    }
+    if (start >= high_exclusive) {
+      continue;
+    }
+
+    size_t offset = (size_t)((start - low) / 2);
+    for (; offset < size; offset += (size_t)p) {
+      bit_word_clear(is_prime, offset);
+    }
+  }
+
+  u128     sum         = 0;
+  uint64_t prime_count = 0;
+
+  for (size_t offset = 0; offset < size; ++offset) {
+    if (!bit_word_test(is_prime, offset)) {
+      continue;
+    }
+
+    const uint64_t prime = low + 2 * (uint64_t)offset;
+    sum += (u128)prime;
+    ++prime_count;
+  }
+
+  *sum_out   = sum;
+  *count_out = prime_count;
+}
+
 #ifdef _WIN32
 static DWORD WINAPI sieve_worker(LPVOID arg) {
 #else
@@ -319,11 +281,8 @@ static void *sieve_worker(void *arg) {
   uint64_t      local_count = 0;
 
   const size_t segment_words = bit_words_needed((size_t)work->segment_odd_count);
-  uint64_t    *words         = malloc(segment_words * sizeof *words);
-  uint64_t    *next_cross    = malloc(work->base_prime_count * sizeof *next_cross);
-  if (words == NULL || next_cross == NULL) {
-    free(next_cross);
-    free(words);
+  uint64_t    *is_prime      = malloc(segment_words * sizeof *is_prime);
+  if (is_prime == NULL) {
     atomic_store(&work->failed, 1);
 #ifdef _WIN32
     return 0;
@@ -332,31 +291,31 @@ static void *sieve_worker(void *arg) {
 #endif
   }
 
-  init_cross_cursors(worker->range_start, worker->range_end, work->base_primes,
-                     work->base_prime_count, next_cross);
-
-  for (uint64_t low_index = worker->range_start; low_index < worker->range_end;) {
+  for (;;) {
     if (atomic_load(&work->failed) != 0) {
       break;
     }
 
+    const uint64_t low_index = atomic_fetch_add(&work->next_odd_index, work->segment_odd_count);
+    if (low_index >= work->odd_index_limit) {
+      break;
+    }
+
     uint64_t high_index = low_index + work->segment_odd_count;
-    if (high_index > worker->range_end) {
-      high_index = worker->range_end;
+    if (high_index > work->odd_index_limit) {
+      high_index = work->odd_index_limit;
     }
 
     u128     segment_sum   = 0;
     uint64_t segment_count = 0;
-    sieve_odd_segment(low_index, high_index, work->base_primes, work->base_prime_count, words,
-                      next_cross, &segment_sum, &segment_count);
+    sieve_odd_segment(low_index, high_index, work->base_primes, work->base_prime_count, is_prime,
+                      &segment_sum, &segment_count);
 
     local_sum += segment_sum;
     local_count += segment_count;
-    low_index = high_index;
   }
 
-  free(next_cross);
-  free(words);
+  free(is_prime);
   worker->result->sum   = local_sum;
   worker->result->count = local_count;
 
@@ -516,10 +475,6 @@ static int worker_thread_count(void) {
   return cores - 1;
 }
 
-static uint64_t min_u64(uint64_t a, uint64_t b) {
-  return a < b ? a : b;
-}
-
 static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_out,
                             uint64_t *count_out) {
   if (end < 2) {
@@ -529,7 +484,7 @@ static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_o
   }
 
   const uint64_t root = isqrt_u64(end);
-  /* 2^21 odd slots -> 256 KiB bit buffer; 64-bit aligned, no init tail mask. */
+  /* 2^21 odd slots -> 256 KiB bit buffer; leaves L2 headroom on 512 KiB cores. */
   const uint64_t segment_odd_count = 1ULL << 21;
   const uint64_t odd_index_limit   = (end + 1) / 2;
 
@@ -568,6 +523,7 @@ static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_o
       .odd_index_limit   = odd_index_limit,
       .base_primes       = base_primes,
       .base_prime_count  = base_prime_count,
+      .next_odd_index    = 1,
       .failed            = 0,
   };
 
@@ -581,22 +537,6 @@ static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_o
     return -1;
   }
 
-  const uint64_t searchable = odd_index_limit - 1;
-  const uint64_t chunk      = (searchable + (uint64_t)threads - 1) / (uint64_t)threads;
-
-  for (int i = 0; i < threads; ++i) {
-    const uint64_t range_start = 1 + (uint64_t)i * chunk;
-    uint64_t       range_end   = 1 + (uint64_t)(i + 1) * chunk;
-    if (range_end > odd_index_limit) {
-      range_end = odd_index_limit;
-    }
-
-    args[i].work        = &work;
-    args[i].result      = &results[i];
-    args[i].range_start = min_u64(range_start, odd_index_limit);
-    args[i].range_end   = min_u64(range_end, odd_index_limit);
-  }
-
 #ifdef _WIN32
   HANDLE *handles = calloc((size_t)threads, sizeof *handles);
   if (handles == NULL) {
@@ -608,7 +548,9 @@ static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_o
   }
 
   for (int i = 0; i < threads; ++i) {
-    handles[i] = CreateThread(NULL, 0, sieve_worker, &args[i], 0, NULL);
+    args[i].work   = &work;
+    args[i].result = &results[i];
+    handles[i]     = CreateThread(NULL, 0, sieve_worker, &args[i], 0, NULL);
     if (handles[i] == NULL) {
       for (int j = 0; j < i; ++j) {
         WaitForSingleObject(handles[j], INFINITE);
@@ -639,6 +581,8 @@ static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_o
   }
 
   for (int i = 0; i < threads; ++i) {
+    args[i].work   = &work;
+    args[i].result = &results[i];
     if (pthread_create(&workers[i], NULL, sieve_worker, &args[i]) != 0) {
       for (int j = 0; j < i; ++j) {
         pthread_join(workers[j], NULL);

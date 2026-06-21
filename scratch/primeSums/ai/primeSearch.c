@@ -1,3 +1,7 @@
+#ifndef _WIN32
+#define _DEFAULT_SOURCE
+#endif
+
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,8 +14,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
-#include <ctype.h>
-#include <dirent.h>
 #include <pthread.h>
 #include <unistd.h>
 #endif
@@ -130,28 +132,6 @@ static void print_u128_plain(u128 value) {
   }
 }
 
-static inline size_t bit_words_needed(size_t bit_count) {
-  return (bit_count + 63u) / 64u;
-}
-
-static inline void bit_words_set_all(uint64_t *words, size_t bit_count) {
-  const size_t nwords = bit_words_needed(bit_count);
-  memset(words, 0xFF, nwords * sizeof *words);
-
-  const size_t extra = nwords * 64u - bit_count;
-  if (extra != 0) {
-    words[nwords - 1] &= ~0ull >> extra;
-  }
-}
-
-static inline void bit_word_clear(uint64_t *words, size_t i) {
-  words[i / 64] &= ~(1ull << (i % 64));
-}
-
-static inline int bit_word_test(const uint64_t *words, size_t i) {
-  return (int)((words[i / 64] >> (i % 64)) & 1ull);
-}
-
 static size_t sieve_primes_upto(uint64_t limit, uint32_t **primes_out) {
   if (limit < 2) {
     *primes_out = NULL;
@@ -206,7 +186,7 @@ static size_t sieve_primes_upto(uint64_t limit, uint32_t **primes_out) {
 }
 
 static void sieve_odd_segment(uint64_t low_index, uint64_t high_index, const uint32_t *base_primes,
-                              size_t base_prime_count, uint64_t *is_prime, u128 *sum_out,
+                              size_t base_prime_count, unsigned char *is_prime, u128 *sum_out,
                               uint64_t *count_out) {
   const size_t size = (size_t)(high_index - low_index);
   if (size == 0) {
@@ -215,7 +195,7 @@ static void sieve_odd_segment(uint64_t low_index, uint64_t high_index, const uin
     return;
   }
 
-  bit_words_set_all(is_prime, size);
+  memset(is_prime, 1, size);
 
   const uint64_t low            = 2 * low_index + 1;
   const uint64_t high_exclusive = 2 * high_index + 1;
@@ -245,7 +225,7 @@ static void sieve_odd_segment(uint64_t low_index, uint64_t high_index, const uin
 
     size_t offset = (size_t)((start - low) / 2);
     for (; offset < size; offset += (size_t)p) {
-      bit_word_clear(is_prime, offset);
+      is_prime[offset] = 0;
     }
   }
 
@@ -253,7 +233,7 @@ static void sieve_odd_segment(uint64_t low_index, uint64_t high_index, const uin
   uint64_t prime_count = 0;
 
   for (size_t offset = 0; offset < size; ++offset) {
-    if (!bit_word_test(is_prime, offset)) {
+    if (!is_prime[offset]) {
       continue;
     }
 
@@ -276,8 +256,7 @@ static void *sieve_worker(void *arg) {
   u128          local_sum   = 0;
   uint64_t      local_count = 0;
 
-  const size_t segment_words = bit_words_needed((size_t)work->segment_odd_count);
-  uint64_t    *is_prime      = malloc(segment_words * sizeof *is_prime);
+  unsigned char *is_prime = malloc((size_t)work->segment_odd_count * sizeof *is_prime);
   if (is_prime == NULL) {
     atomic_store(&work->failed, 1);
 #ifdef _WIN32
@@ -322,145 +301,20 @@ static void *sieve_worker(void *arg) {
 #endif
 }
 
-static int read_sysfs_int(const char *path) {
-  FILE *file = fopen(path, "r");
-  if (file == NULL) {
-    return -1;
-  }
-
-  int value = -1;
-  if (fscanf(file, "%d", &value) != 1) {
-    value = -1;
-  }
-
-  fclose(file);
-  return value;
-}
-
-static bool sysfs_cpu_topology_path(char *path, size_t path_size, const char *cpu_name,
-                                    const char *field) {
-  static const char prefix[]  = "/sys/devices/system/cpu/";
-  static const char middle[]  = "/topology/";
-  const size_t      field_len = strlen(field);
-  const size_t      fixed_len = (sizeof prefix - 1) + (sizeof middle - 1) + field_len;
-
-  if (path_size <= fixed_len) {
-    return false;
-  }
-
-  const int name_max = (int)(path_size - fixed_len - 1);
-  const int written =
-      snprintf(path, path_size, "%s%.*s%s%s", prefix, name_max, cpu_name, middle, field);
-
-  return written > 0 && (size_t)written < path_size;
-}
-
-static int physical_core_count(void) {
-#ifdef _WIN32
-  DWORD buffer_length = 0;
-  GetLogicalProcessorInformation(NULL, &buffer_length);
-  if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-    return 1;
-  }
-
-  SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buffer = malloc(buffer_length);
-  if (buffer == NULL) {
-    return 1;
-  }
-
-  if (!GetLogicalProcessorInformation(buffer, &buffer_length)) {
-    free(buffer);
-    return 1;
-  }
-
-  int         cores = 0;
-  const DWORD count = buffer_length / (DWORD)sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
-  for (DWORD i = 0; i < count; ++i) {
-    if (buffer[i].Relationship == RelationProcessorCore) {
-      ++cores;
-    }
-  }
-
-  free(buffer);
-  return cores > 0 ? cores : 1;
-#else
-  DIR *dir = opendir("/sys/devices/system/cpu");
-  if (dir != NULL) {
-    struct core_key {
-      int package_id;
-      int core_id;
-    } cores[1024];
-    int core_count = 0;
-
-    struct dirent *entry = NULL;
-    while ((entry = readdir(dir)) != NULL) {
-      if (entry->d_name[0] != 'c' || strncmp(entry->d_name, "cpu", 3) != 0) {
-        continue;
-      }
-
-      const char *suffix = entry->d_name + 3;
-      if (*suffix == '\0') {
-        continue;
-      }
-
-      for (const char *ch = suffix; *ch != '\0'; ++ch) {
-        if (!isdigit((unsigned char)*ch)) {
-          goto next_cpu;
-        }
-      }
-
-      {
-        char path[256];
-        if (!sysfs_cpu_topology_path(path, sizeof path, entry->d_name, "physical_package_id")) {
-          goto next_cpu;
-        }
-        const int package_id = read_sysfs_int(path);
-        if (!sysfs_cpu_topology_path(path, sizeof path, entry->d_name, "core_id")) {
-          goto next_cpu;
-        }
-        const int core_id = read_sysfs_int(path);
-        if (package_id < 0 || core_id < 0) {
-          goto next_cpu;
-        }
-
-        int found = 0;
-        for (int i = 0; i < core_count; ++i) {
-          if (cores[i].package_id == package_id && cores[i].core_id == core_id) {
-            found = 1;
-            break;
-          }
-        }
-
-        if (!found && core_count < (int)(sizeof cores / sizeof cores[0])) {
-          cores[core_count].package_id = package_id;
-          cores[core_count].core_id    = core_id;
-          ++core_count;
-        }
-      }
-
-    next_cpu:
-      continue;
-    }
-
-    closedir(dir);
-    if (core_count > 0) {
-      return core_count;
-    }
-  }
-
-  {
-    const long logical = sysconf(_SC_NPROCESSORS_ONLN);
-    return logical > 0 ? (int)logical : 1;
-  }
-#endif
-}
-
 static int worker_thread_count(void) {
-  int cores = physical_core_count();
+  unsigned int cores = 1;
 
 #ifdef _WIN32
+  SYSTEM_INFO info;
+  GetSystemInfo(&info);
+  cores = info.dwNumberOfProcessors;
   if (cores > MAXIMUM_WAIT_OBJECTS) {
     cores = MAXIMUM_WAIT_OBJECTS;
+  }
+#else
+  long detected = sysconf(_SC_NPROCESSORS_ONLN);
+  if (detected > 0) {
+    cores = (unsigned int)detected;
   }
 #endif
 
@@ -468,7 +322,7 @@ static int worker_thread_count(void) {
     return 1;
   }
 
-  return cores - 1;
+  return (int)(cores - 1);
 }
 
 static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_out,
@@ -479,9 +333,8 @@ static int run_prime_search(uint64_t end, int threads, bool verbose, u128 *sum_o
     return 0;
   }
 
-  const uint64_t root = isqrt_u64(end);
-  /* 2^21 odd slots -> 256 KiB bit buffer; leaves L2 headroom on 512 KiB cores. */
-  const uint64_t segment_odd_count = 1ULL << 21;
+  const uint64_t root              = isqrt_u64(end);
+  const uint64_t segment_odd_count = 1ULL << 22;
   const uint64_t odd_index_limit   = (end + 1) / 2;
 
   if (verbose) {

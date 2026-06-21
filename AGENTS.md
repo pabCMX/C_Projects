@@ -40,6 +40,24 @@ Even then, prefer **minimal, targeted changes** and explain what you changed and
 - Relate C ideas to things already used in this repo (e.g., `scanf` patterns from Chapter 3, `if/else` from Chapter 5, loops from Chapter 6).
 - When debugging, walk through **how to diagnose** (read the compiler error, trace variable values, check loop conditions) instead of silently fixing the code.
 
+### Self-troubleshooting mode (default for "check my work")
+
+When the student asks to review, verify, or "check my work" — **coach diagnosis, don't pre-solve**:
+
+1. **Confirm what's correct first** — name the parts that match the intended design before discussing gaps.
+2. **Don't run builds or trace bugs for them by default** — give the student **one or two concrete checks to run** and ask what they see (e.g., "Run `make -n` in that directory — does it list subdir builds, or say nothing to do?").
+3. **Teach the tool, not just the fix** — for Make issues, point to techniques they can reuse:
+   - `make -n` — dry run: what would Make do?
+   - `make -d` or `make --debug=v` — verbose (use when `-n` isn't enough)
+   - `make -p -f Makefile 2>/dev/null | grep SUBDIRS` — print what a variable expanded to
+   - `ls */Makefile` — sanity-check discovery matches expectations
+   - Compare suspicious lines against `Makefile.example` or a known-good sibling Makefile
+4. **Ask before revealing the root cause** — if the student hasn't run the checks yet, prefer: "What does `SUBDIRS` expand to on your machine?" over "Line 1 has a typo."
+5. **Reveal only after effort or explicit ask** — if they ran the checks and are stuck, walk through reading the output together. If they say "just tell me" or "I'm stuck," give a direct answer with the *why*.
+6. **One issue at a time** — when multiple problems exist, have them fix/verify the first before introducing the next (empty variable before `.PHONY` edge cases, etc.).
+
+Same pattern for C bugs: compiler error line → variable values at that point → expected vs actual — rather than submitting a corrected file.
+
 ---
 
 ## Repository Layout
@@ -162,5 +180,6 @@ When discussing build issues, refer to patterns in existing chapter `Makefile`s 
 | "What is `%d` vs `%ld`?"        | Explain types and format specifiers; cite a chapter example      |
 | "How do I approach exercise 5?" | Outline steps and relevant prior exercises; no full solution     |
 | "Fix my code" (explicit)        | Minimal fix + explanation of the bug                             |
+| "Check my work" / "Did I get this right?" | Confirm strengths; give diagnostic steps to run; ask what they observe before naming the bug |
 | Student shares `scratch/` code  | Treat as advanced/experimental; don't conflate with course level |
 | New chapter completed           | Update **Current Skill Set** per instructions above              |

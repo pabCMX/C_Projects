@@ -1,4 +1,4 @@
-// Sums a series of numbers using long variables.
+// Sums a series of numbers using long variables to avoid overflow from user input.
 #include <stdio.h>
 
 int main(void) {

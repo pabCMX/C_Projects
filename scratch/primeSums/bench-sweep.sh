@@ -107,9 +107,9 @@ else
     printf 'Target: %s\n' "$TARGET"
     printf 'Timing: %s runs, mean of best %s\n' "$RUNS" "$TOP_N"
     printf 'Baselines: %s\n' "$BASELINE"
-    printf '%-4s %-14s %-8s %-8s %-8s %-7s %-7s %-3s %s\n' \
+    printf '%-4s %-14s %-12s %-12s %-12s %-7s %-7s %-3s %s\n' \
         'exp' 'end' 'target_s' 'orig_s' 'opt_s' 'sp_opt' 'sp_tgt' 'ok' 'notes'
-    printf '%s\n' '---- -------------- -------- -------- -------- ------- ------- --- -----'
+    printf '%s\n' '---- -------------- ------------ ------------ ------------ ------- ------- --- -----'
 fi
 
 for exp in $(seq "$EXP_MIN" "$EXP_MAX"); do
@@ -150,7 +150,7 @@ PY
     if [[ $CSV -eq 1 ]]; then
         echo "$exp,$end,$target_wall,$target_sum,$orig_wall,$opt_wall,$speedup_opt,$speedup_tgt,$ok,$has_baseline"
     else
-        printf '%-4s %-14s %-8s %-8s %-8s %-7s %-7s %-3s %s\n' \
+        printf '%-4s %-14s %-12s %-12s %-12s %-7s %-7s %-3s %s\n' \
             "$exp" "$end" "$target_wall" "$orig_wall" "$opt_wall" \
             "$speedup_opt" "$speedup_tgt" "$ok" "$note"
     fi
