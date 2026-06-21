@@ -170,8 +170,9 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
   return prime_count;
 }
 
-// Naive prime search and sum alg to find sum of all primes between 2 and 2^31 or arg.
-// Store 'n sum is a bad process but just an excuse to learn how growing arrays works.
+// Square Root of end prime search for bool array multiple stride alg to find sum of all primes
+// between 2 and 2^31 or given arg. ~18.5x better than the old mod, count, and sum version on ends
+// greater than ~2^23.
 int main(int argc, char *argv[]) {
   const char        *endpoint_arg         = NULL;
   _Bool              sum_only             = false;

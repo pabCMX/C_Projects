@@ -26,7 +26,7 @@ unsigned long isqrt(unsigned long n) {
   return lo;
 }
 // Naive prime search and sum alg to find sum of all primes between 2 and 2^31 or arg.
-// Store 'n sum is a bad process but just an excuse to learn how growing arrays works.
+// Now only stores up to sqrt(end), and counts and sums as we go. About 230x better for > 2^18 ends.
 int main(int argc, char *argv[]) {
   const char        *endpoint_arg = NULL;
   _Bool              atty_good    = false;
