@@ -1,5 +1,6 @@
 #ifndef _WIN32
 #define _DEFAULT_SOURCE
+#include <stddef.h>
 #endif
 
 #include <errno.h>
@@ -8,6 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
+
+__extension__ typedef unsigned __int128 u128;
 
 uint64_t isqrt(uint64_t n) {
   if (n == 0)
@@ -27,7 +30,32 @@ uint64_t isqrt(uint64_t n) {
   return lo;
 }
 
-static int parse_args(const char *text, uint64_t *end, uint64_t *primes_capacity) {
+static void print_u128(FILE *f, u128 v) {
+  if (v == 0) {
+    fputc('0', f);
+    return;
+  }
+
+  char   buffer[40]; // Enough to fit a u128 long number
+  size_t n = 0;
+
+  while (v > 0) {
+    // A little terse but in short, for a given buffer slot, we take the last digit of the num, and
+    // cast it to a char. Since chararacters are treated as ints, we can 'add' to get the right
+    // digit character in binary.
+    buffer[n++] = (char)('0' + (v % 10));
+    // Then we divide by 10, truncating the number by one decimal place.
+    v /= 10;
+  }
+
+  while (n > 0) {
+    // Now in reverse, we build the character string from the front backwards directly in the text
+    // stream.
+    fputc(buffer[--n], f);
+  }
+}
+
+static int parse_args(const char *text, uint64_t *end) {
   char *endptr;
   errno = 0;
   *end  = strtoull(text, &endptr, 10);
@@ -38,50 +66,36 @@ static int parse_args(const char *text, uint64_t *end, uint64_t *primes_capacity
     printf("Endpoint too large, use a smaller number. Exiting...");
     return -1;
   }
-  if (*primes_capacity < isqrt(*end) / 2 + 16)
-    *primes_capacity = isqrt(*end) / 2 + 16; // Lazy fudge for presize.
   return 0;
 }
-/*
-//Resize array function for possible prime array fudge being wrong.
-static int resize_array(uint64_t **array, uint64_t *capacity) {
-  // Otherwise we expand by 2x primes_capacity.
-  uint64_t new_capacity = *capacity * 2ul;
 
-  // Create a temporary array *pointer* to a bigger array.
-  uint64_t *tmp = realloc(*array, new_capacity * sizeof(**array));
+static void run_terminal_updates(uint64_t high, uint64_t end, uint32_t *last_update,
+                                 uint64_t *total_primes_counter) {
+  // Update handling
+  uint32_t updates        = 2000;
+  uint32_t current_update = high * updates / end;
+  if (current_update > *last_update && isatty(STDERR_FILENO)) {
 
-  // Handle errors.
-  if (tmp == NULL) {
-    free(*array);
-    printf("Unable to reallocate primes array. Exiting...\n");
-    return EXIT_FAILURE;
+    fprintf(stderr, "\rPrime count: %-10lu | Completion %%: %5.2f", *total_primes_counter,
+            100.0 * current_update / updates);
+    fflush(stderr);
+    *last_update = current_update;
   }
-
-  // Finally set primes pointer to new array, and primes_capacity to new_capacity.
-  *array    = tmp;
-  *capacity = new_capacity;
-
-  return 0;
 }
-*/
 
 // Run initial prime search from 2 to sqrt(end), and return total primes counted. Bool Sieve instead
 // of Find and Store.
-static int pre_sieve(uint32_t *primes, uint64_t end, uint64_t *base_prime_count) {
+static uint32_t *pre_sieve(uint64_t end, uint64_t *base_prime_count) {
 
-  *base_prime_count = 0; // making sure we're set to zero.
-  uint32_t root     = isqrt(end);
-  // Setup the bool array
-  unsigned char *is_composite = malloc(root);
+  uint32_t count = 0; // making sure we're set to zero.
+  uint64_t root  = isqrt(end);
+  // Setup the bool array with all zeros
+  unsigned char *is_composite = calloc(root + 1, 1);
   // Handle errors
   if (is_composite == NULL) {
     printf("Unable to allocate presieve composites array. Exiting...\n");
-    return -1;
+    return NULL;
   }
-
-  // Set everything to zeros
-  memset(is_composite, 0, root + 1);
 
   // Set the obvious 0 and 1 as composite
   is_composite[0] = 1;
@@ -96,89 +110,141 @@ static int pre_sieve(uint32_t *primes, uint64_t end, uint64_t *base_prime_count)
         // We've found the last prime that still strikes within the pre-sieve.
         break;
       }
-      for (uint32_t j = p_squared; j < root; j += p) {
+      for (uint32_t j = p_squared; j <= root; j += p) {
         is_composite[j] = 1;
       }
     }
   }
 
-  // Now we save the primes we have left while also updating our counter;
-
+  // Now we count the primes we have left.
   for (uint32_t i = 0; i <= root; i++) {
     if (!is_composite[i]) {
-      primes[(*base_prime_count)++] = i;
+      count++;
     }
   }
+
+  // Then allocate the base_primes array.
+  uint32_t *primes = malloc(count * sizeof(uint32_t));
+  // And fill it.
+  uint32_t index = 0;
+  for (uint32_t i = 0; i <= root; i++) {
+    if (!is_composite[i]) {
+      primes[index++] = i;
+    }
+  }
+
   // We finished the presieve setup, return and start the complete bool sieve.
   free(is_composite);
-  return 0;
+  *base_prime_count = count;
+  return primes;
 }
 
-// Sets given segmented sieve
-static void seg_sieve(uint32_t *primes, unsigned char *is_composite, uint64_t base_prime_count,
-                      uint64_t low_index, uint64_t high_index, __int128 *out_p_sum,
-                      uint64_t *out_p_count) {
+// Finds all primes below given end with given composite array.
+static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint64_t high_num,
+                          uint64_t low_num, u128 *out_p_sum, uint64_t *out_p_count) {
 
-  // If it's the first block, we set the obvious ones to composite:
-  if (low_index < 1) {
-    is_composite[0] = 1;
-    is_composite[1] = 1;
-  }
-  __int128 segment_sum   = 0;
+  u128     segment_sum   = 0;
   uint64_t segment_count = 0;
-  uint64_t segment_size  = high_index - low_index;
+  uint64_t segment_size  = ((high_num - low_num + 1) / 2);
+
+  unsigned char *is_composite = calloc(segment_size, 1);
+  if (is_composite == NULL) {
+    printf("Unable to allocate presieve composites array. Exiting...\n");
+    return -1;
+  }
+  // If it's the first block, we set the obvious ones to composite:
+  if (low_num == 1) {
+    is_composite[0] = 1;
+  }
 
   // Then we iterate through every prime in primes[] that has a multiple within the segment.
-  for (uint64_t i = 0; i < base_prime_count; i++) {
-    uint64_t p         = primes[i];
+  for (unsigned long i = 0; i < base_prime_count; i++) {
+    uint64_t p = primes[i];
+
+    if (p == 2)
+      continue;
+
     uint64_t p_squared = p * p;
+    // If we're beyond the high bound, just break here.
+    if (p_squared >= high_num) {
+      break;
+    }
 
     // Start with first multiple of p that is >= low
-    uint64_t start = low_index + ((p - (low_index % p)) % p);
+    uint64_t start = ((low_num + p - 1) / p) * p;
+    if (start % 2 == 0)
+      start += p;
 
     // If p^2 is greater than the multiple, just use that.
     if (start < p_squared) {
       start = p_squared;
     }
-
-    // If we're beyond the high bound, just break here.
-    if (start >= high_index) {
-      break;
+    // If we're beyond the high bound, continue to the next.
+    if (start >= high_num) {
+      continue;
     }
 
     // Finally calculate the offset from our multiple to the segment index.
     // and check off multiples until we hit the end of the sieve.
-    for (uint64_t offset = start - low_index; offset < segment_size; offset += p) {
+    uint32_t offset = (start - low_num) / 2;
+    for (; offset < segment_size; offset += p) {
       is_composite[offset] = 1;
     }
   }
 
   // Accumulate sum and prime count from the composite sieve.
-  for (uint64_t i = 0; i < segment_size; i++) {
+  for (unsigned long i = 0; i < segment_size; i++) {
     if (!is_composite[i]) {
-      segment_sum += low_index + i;
+      segment_sum += low_num + (2 * i);
       segment_count++;
     }
   }
   *out_p_count += segment_count;
   *out_p_sum += segment_sum;
+  free(is_composite);
+  return 0;
+}
+
+// Sets up and manages the main sieve loop.
+static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t block_size,
+                           uint64_t end, u128 *prime_sum, uint64_t *total_primes_counter,
+                           _Bool sum_only) {
+  uint32_t last_update = 0;
+  // Set up a loop to iterate by segment[i]
+  for (unsigned long i = 0;; i++) {
+
+    // Set the high and low indexes.
+    unsigned long low  = ((i * block_size) * 2) + 1;
+    unsigned long high = (((i + 1) * block_size) * 2) + 1;
+
+    if (low >= end) {
+      // If the segment low number jumps over the end, we're done.
+      break;
+    }
+    if (high > end) {
+      high = end;
+    }
+    if (odds_seg_sieve(primes, base_prime_count, high, low, prime_sum, total_primes_counter) != 0)
+      return -1;
+
+    if (!sum_only)
+      run_terminal_updates(high, end, &last_update, total_primes_counter);
+  }
+  return 0;
 }
 
 // Square Root of end prime search w/ segmented odds - only sieve to find sum of all primes
-// between 2 and 2^31 or given arg. ~5x better than non-odds only version on ends
-// greater than ~2^23.
+// between 2 and 2^31 or given arg. Hoping for ~5x better perf than non-odds only version on
+// ends greater than ~2^23. Downsized the block size to fit better into L2
 int main(int argc, char *argv[]) {
-  const char  *endpoint_arg         = NULL;
-  _Bool        sum_only             = false;
-  uint64_t     end                  = 1;
-  __int128     prime_sum            = 0;
-  uint64_t     total_primes_counter = 0;
-  uint64_t     primes_capacity      = 64;      // Base primes array size.
-  uint64_t     base_prime_count     = 0;       // Primes in sqrt(end) base sieve array.
-  uint64_t     block_size           = 1 << 20; // Segment size (~1MB of unsigned char).
-  unsigned int updates              = 1000;    // Status Updates per run.
-  unsigned int current_update       = 0;       // current status count
-  unsigned int last_update          = 0;       // Last status update count.
+  const char *endpoint_arg         = NULL;
+  _Bool       sum_only             = false;
+  uint64_t    end                  = 1;
+  u128        prime_sum            = 2;       // Adding 2 to start.
+  uint64_t    total_primes_counter = 1;       // Counting 2
+  uint64_t    primes_capacity      = 64;      // Base primes array size.
+  uint64_t    base_prime_count     = 0;       // Primes in sqrt(end) base sieve array.
+  uint64_t    block_size           = 1 << 19; // Segment size (~512KiB of unsigned char).
   if (argc > 3) {
     // If we get too many arguments, exit with error
     printf("Usage: %s <endpoint> [--sum-only]\n", argv[0]);
@@ -204,8 +270,8 @@ int main(int argc, char *argv[]) {
       printf("No arguments found\n");
   } else {
     // If we got an argument to sum to,
-    // we convert from text to an __int128 int with strtoull()
-    if (parse_args(endpoint_arg, &end, &primes_capacity) != 0)
+    // we convert from text to an unsigned 64-bit int with strtoull()
+    if (parse_args(endpoint_arg, &end) != 0)
       return EXIT_FAILURE;
   }
 
@@ -214,83 +280,46 @@ int main(int argc, char *argv[]) {
     printf("Starting Search...\n");
   }
 
-  // Late assignment so we don't have to free on each possible error before now.
-  uint32_t *primes = malloc(primes_capacity * sizeof(*primes));
-
-  // Handle errors
-  if (primes == NULL) {
-    printf("Error allocating primes array.\n");
-    return EXIT_FAILURE;
-  }
+  if (primes_capacity < isqrt(end) / 2 + 16)
+    primes_capacity = isqrt(end) / 2 + 16; // Lazy fudge for presize.
+  // Late assign/alloc so we don't have to free on each possible error before now.
 
   // Now run the pre_sieve for the primes < sqrt(end)
-
-  if (pre_sieve(primes, end, &base_prime_count) != 0) {
-    free(primes);
+  uint32_t *base_primes = pre_sieve(end, &base_prime_count);
+  if (base_primes == NULL) {
+    printf("Error allocating primes array.\n");
+    free(base_primes);
     return EXIT_FAILURE;
   }
+
   if (!sum_only) {
     printf("Presieve complete.\n");
     printf("Base Prime Count is %lu\n", base_prime_count);
     printf("Starting segmented sieve...\n");
-    printf("%lu segments needed...\n", (end + (block_size - 1)) / block_size);
   }
 
-  // If we didn't have any issues, run the real sieve.
-  // First allocate the single bool array buffer.
-  unsigned char *is_composite = malloc(block_size * sizeof(unsigned char));
-  // Handle errors.
-  if (is_composite == NULL) {
-    printf("Error allocating flag sieve.\n");
-    free(primes);
+  // If we didn't have any issues, run the real segmented sieve.
+  if (run_full_search(base_primes, base_prime_count, block_size, end, &prime_sum,
+                      &total_primes_counter, sum_only) != 0) {
+    free(base_primes);
     return EXIT_FAILURE;
   }
 
-  // Then set up a loop to run the sieves sequentially, and accumulate the intermediate sum &
-  // count.
-  for (uint64_t i = 0;; i++) {
-
-    // Set the high and low indexes.
-    uint64_t low  = i * block_size;
-    uint64_t high = (i + 1) * block_size;
-    // Clear the bool array to zero (this also only touches the necessary bytes)
-    memset(is_composite, 0, high - low);
-
-    if (low >= end) {
-      // If the segment is jumps over the end, we're done.
-      break;
-    }
-    if (high > end) {
-      high = end;
-    }
-    seg_sieve(primes, is_composite, base_prime_count, low, high, &prime_sum, &total_primes_counter);
-
-    // Update handling
-    current_update = high * updates / end;
-
-    if (!sum_only && current_update > last_update && isatty(STDERR_FILENO)) {
-
-      fprintf(stderr, "\rPrime count: %-10lu | Sum: %20llu | Completion %%: %5.2f",
-              total_primes_counter, prime_sum, 100.0 * current_update / updates);
-      fflush(stderr);
-      last_update = current_update;
-    }
-  }
-
   if (!sum_only && isatty(STDERR_FILENO)) {
-    fprintf(stderr, "\rPrime count: %-10lu | Sum: %20llu | Completion %%: %3.2f \n",
-            total_primes_counter, prime_sum, 100.00f);
+    fprintf(stderr, "\rPrime count: %-10lu Completion %%: %3.2f \n", total_primes_counter, 100.00f);
     fflush(stderr);
   }
 
   if (!sum_only) {
     printf("Found %lu primes [0, %lu)\n", total_primes_counter, end);
-    printf("Sum of found primes is %llu\n", prime_sum);
+    fputs("Sum of found primes is ", stdout);
+    print_u128(stdout, prime_sum);
+    putchar('\n');
   } else {
-    printf("%llu\n", prime_sum);
+    print_u128(stdout, prime_sum);
+    putchar('\n');
   }
 
-  free(primes);
-  free(is_composite);
+  free(base_primes);
   return 0;
 }
