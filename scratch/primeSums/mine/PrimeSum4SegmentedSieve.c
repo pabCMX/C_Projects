@@ -131,6 +131,8 @@ static void seg_sieve(unsigned long *primes, unsigned char *is_composite,
   for (unsigned long i = 0; i < base_prime_count; i++) {
     unsigned long      p         = primes[i];
     unsigned long long p_squared = p * p;
+    if (p_squared > high_index)
+      break;
 
     // Start with first multiple of p that is >= low
     unsigned long long start = low_index + ((p - (low_index % p)) % p);
@@ -142,7 +144,7 @@ static void seg_sieve(unsigned long *primes, unsigned char *is_composite,
 
     // If we're beyond the high bound, just break here.
     if (start >= high_index) {
-      break;
+      continue;
     }
 
     // Finally calculate the offset from our multiple to the segment index.
@@ -164,7 +166,7 @@ static void seg_sieve(unsigned long *primes, unsigned char *is_composite,
 }
 
 // Square Root of end prime search w/ segmented bool array to find sum of all primes
-// between 2 and 2^31 or given arg. Hopefully better than the old bool array version on ends
+// [2,  2^31] (or arg). Hopefully better than the old bool array version on ends
 // greater than ~2^23.
 int main(int argc, char *argv[]) {
   const char        *endpoint_arg         = NULL;
@@ -255,12 +257,12 @@ int main(int argc, char *argv[]) {
     // Clear the bool array to zero (this also only touches the necessary bytes)
     memset(is_composite, 0, high - low);
 
-    if (low >= end) {
+    if (low > end) {
       // If the segment is jumps over the end, we're done.
       break;
     }
     if (high > end) {
-      high = end;
+      high = end + 1;
     }
     seg_sieve(primes, is_composite, base_prime_count, low, high, &prime_sum, &total_primes_counter);
 

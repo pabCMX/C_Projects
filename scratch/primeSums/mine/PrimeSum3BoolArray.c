@@ -116,7 +116,7 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
                                 unsigned long long *prime_sum, unsigned long end, _Bool sum_only) {
 
   unsigned long prime_count = 0;
-  size_t        size        = (end * sizeof(int)) + 1;
+  size_t        size        = ((end + 1) * sizeof(int));
   // First we create the flag sieve
   int *isComposite = malloc(size);
   if (isComposite == NULL) {
