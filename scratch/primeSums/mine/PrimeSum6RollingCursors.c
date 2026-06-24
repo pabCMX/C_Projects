@@ -143,8 +143,8 @@ static uint32_t *pre_sieve(uint64_t end, uint64_t *base_prime_count) {
 
 // Finds all primes below given end with given composite array.
 static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, unsigned char *is_composite,
-                          uint64_t high_num, uint64_t low_num, u128 *out_p_sum,
-                          uint64_t *out_p_count) {
+                          uint64_t *next_cursor, uint64_t high_num, uint64_t low_num,
+                          u128 *out_p_sum, uint64_t *out_p_count) {
 
   u128     segment_sum   = 0;
   uint64_t segment_count = 0;
@@ -156,42 +156,28 @@ static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, unsigned 
   }
 
   // Then we iterate through every prime in primes[] that has a multiple within the segment.
-  for (unsigned long i = 0; i < base_prime_count; i++) {
-    uint64_t p = primes[i];
-
+  for (uint64_t i = 0; i < base_prime_count; i++) {
+    uint64_t p         = primes[i];
+    uint64_t p_squared = p * p;
     if (p == 2)
       continue;
-
-    uint64_t p_squared = p * p;
-    // If we're beyond the high bound, just break here.
-    if (p_squared >= high_num) {
+    if (p_squared >= high_num)
       break;
-    }
+    // We need to compute the segment relative offset for the otherwise global index in next_cursor
+    uint64_t segment_base = (low_num - 1) / 2;
+    uint64_t offset       = next_cursor[i] - segment_base;
 
-    // Start with first multiple of p that is >= low
-    uint64_t start = ((low_num + p - 1) / p) * p;
-    if (start % 2 == 0)
-      start += p;
-
-    // If p^2 is greater than the multiple, just use that.
-    if (start < p_squared) {
-      start = p_squared;
-    }
-    // If we're beyond the high bound, continue to the next.
-    if (start >= high_num) {
-      continue;
-    }
-
-    // Finally calculate the offset from our multiple to the segment index.
-    // and check off multiples until we hit the end of the sieve.
-    uint32_t offset = (start - low_num) / 2;
-    for (; offset < segment_size; offset += p) {
+    // Now while we are below the size of the segment, we stride by p and mark each multiple.
+    while (offset < segment_size) {
       is_composite[offset] = 1;
+      offset += p;
     }
-  }
 
+    // When we're done, we save the next multiple, adding back segment_base to get the global index
+    next_cursor[i] = offset + segment_base;
+  }
   // Accumulate sum and prime count from the composite sieve.
-  for (unsigned long i = 0; i < segment_size; i++) {
+  for (uint64_t i = 0; i < segment_size; i++) {
     if (!is_composite[i]) {
       segment_sum += low_num + (2 * i);
       segment_count++;
@@ -208,16 +194,27 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
                            _Bool sum_only) {
   uint32_t       last_update  = 0;
   unsigned char *is_composite = calloc(block_size, 1);
-  if (is_composite == NULL) {
+
+  // We initialize the rolling cursor array to eliminate a ton of our warm loop math.
+  uint64_t *next_cursor = malloc(base_prime_count * sizeof(uint64_t));
+  for (uint32_t i = 0; i < base_prime_count; i++) {
+    // Starting with p squared, as the first possible multiple.
+    uint64_t p         = primes[i];
+    uint64_t p_squared = p * p;
+
+    // We map that square to the odds-only index
+    next_cursor[i] = (p_squared - 1) / 2;
+  }
+  if (is_composite == NULL || next_cursor == NULL) {
     printf("Unable to allocate presieve composites array. Exiting...\n");
     return -1;
   }
   // Set up a loop to iterate by segment[i]
-  for (unsigned long i = 0;; i++) {
+  for (uint32_t i = 0;; i++) {
 
-    // Set the high and low indexes.
-    unsigned long low  = ((i * block_size) * 2) + 1;
-    unsigned long high = (((i + 1) * block_size) * 2) + 1;
+    // Set the high and low numbers for the segment.
+    uint64_t low  = ((i * (uint64_t)block_size) * 2) + 1;
+    uint64_t high = (((i + 1) * (uint64_t)block_size) * 2) + 1;
 
     if (low >= end) {
       // If the segment low number jumps over the end, we're done.
@@ -226,22 +223,23 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
     if (high > end) {
       high = end;
     }
-    if (odds_seg_sieve(primes, base_prime_count, is_composite, high, low, prime_sum,
+
+    if (odds_seg_sieve(primes, base_prime_count, is_composite, next_cursor, high, low, prime_sum,
                        total_primes_counter) != 0)
       return -1;
-
     // Reset for next cycle
     memset(is_composite, 0, block_size);
     if (!sum_only)
       run_terminal_updates(high, end, &last_update, total_primes_counter);
   }
+  free(next_cursor);
   free(is_composite);
+
   return 0;
 }
 
-// Square Root of end prime search w/ segmented odds - only sieve to find sum of all primes
-// between 2 and 2^31 or given arg. ~20% better perf than non-odds only version on
-// ends greater than ~2^23. Downsized the block size to fit better into L2
+// Segmented Odds-only E-sieve with rolling cursors. Searches for primes between 2 and given arg or
+// 2 and 2^31 with no arg. Hoping for ~50% better perf than non-odds only version on ends ~2^31.
 int main(int argc, char *argv[]) {
   const char *endpoint_arg         = NULL;
   _Bool       sum_only             = false;

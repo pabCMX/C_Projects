@@ -36,7 +36,6 @@ exp  end            target_s     orig_s       opt_s        sp_opt  sp_tgt  ok  n
 34   17179869184    34.062666    8.349567     1.203038     6.94    0.25    yes
 35   34359738368    69.443820    15.857553    2.362122     6.71    0.23    MISMATCH
 
-
 Notes:
   - sp_opt = orig/opt; sp_tgt = orig/target (higher = faster).
   - Regenerate baselines: ./bench-capture-baseline.sh

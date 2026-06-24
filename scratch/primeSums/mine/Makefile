@@ -1,6 +1,6 @@
 # Compiler and flags
 CC     = gcc
-CFLAGS = -std=c23 -Wall -Wextra -pedantic -O3 -march=native -pthread -lm
+CFLAGS = -std=c23 -Wall -Wextra -pedantic -O3 -g -march=native -pthread -lm
 
 # Where to put executables
 BUILDDIR = build

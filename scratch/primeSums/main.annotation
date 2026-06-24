@@ -1,0 +1,634 @@
+main() /home/phantompc/dev/cProjects/scratch/primeSums/mine/build/PrimeSum6RollingCursors.exe
+Event: task-clock:ppp
+
+Percent          
+                 
+                 
+              Disassembly of section .text:
+                 
+              0000000000001140 <main>:
+              return 0;   
+              }           
+                 
+              // Segmented Odds-only E-sieve with rolling cursors. Searches for primes between 2 and given arg or
+              // 2 and 2^31 with no arg. Hoping for ~50% better perf than non-odds only version on ends ~2^31.
+              int main(int argc, char *argv[]) {
+                push       %r15 
+                push       %r14 
+                push       %r13 
+                push       %r12 
+                push       %rbp 
+                mov        %rsi,%rbp
+                push       %rbx 
+                sub        $0x48,%rsp
+              u128        prime_sum            = 2;       // Adding 2 to start.
+              uint64_t    total_primes_counter = 1;       // Counting 2
+              uint64_t    primes_capacity      = 64;      // Base primes array size.
+              uint64_t    base_prime_count     = 0;       // Primes in sqrt(end) base sieve array.
+              uint64_t    block_size           = 1 << 19; // Segment size (~512KiB of unsigned char).
+              if (argc > 3) {
+                cmp        $0x3,%edi
+              ↓ jg         5ce  
+                mov        %edi,%ebx
+              // If we get too many arguments, exit with error
+              printf("Usage: %s <endpoint> [--sum-only]\n", argv[0]);
+              return EXIT_FAILURE;
+              }           
+                 
+              for (int i = 1; i < argc; ++i) {
+                cmp        $0x1,%edi
+              ↓ jle        621  
+              if (strcmp(argv[i], "--sum-only") == 0) {
+                mov        0x8(%rsi),%r12
+                lea        _IO_stdin_used+0x124,%r13
+                mov        %r13,%rsi
+                mov        %r12,%rdi
+              → call       strcmp@plt
+                test       %eax,%eax
+              ↓ jne        101  
+              for (int i = 1; i < argc; ++i) {
+                cmp        $0x3,%ebx
+              ↓ jne        5e4  
+              if (strcmp(argv[i], "--sum-only") == 0) {
+                mov        0x10(%rbp),%r12
+                mov        %r13,%rsi
+                mov        %r12,%rdi
+              → call       strcmp@plt
+                test       %eax,%eax
+              ↓ je         5e4  
+              sum_only = true;
+                movb       $0x1,0x2b(%rsp)
+              errno = 0;  
+          68: → call       __errno_location@plt
+                xor        %ecx,%ecx
+              *end  = strtoull(text, &endptr, 10);
+                lea        0x38(%rsp),%rsi
+                mov        $0xa,%edx
+              errno = 0;  
+                mov        %ecx,(%rax)
+              *end  = strtoull(text, &endptr, 10);
+                mov        %r12,%rdi
+              errno = 0;  
+                mov        %rax,%rbx
+              *end  = strtoull(text, &endptr, 10);
+              → call       __isoc23_strtoull@plt
+                mov        %rax,%rbp
+              if (endptr == text || *endptr != '\0' || *end < 2) {
+                mov        0x38(%rsp),%rax
+                cmp        %r12,%rax
+              ↓ je         6cf  
+                cmpb       $0x0,(%rax)
+              ↓ jne        6cf  
+                cmp        $0x1,%rbp
+              ↓ jbe        6cf  
+              } else if (errno == ERANGE) {
+                cmpl       $0x22,(%rbx)
+              ↓ je         6e5  
+              // we convert from text to an unsigned 64-bit int with strtoull()
+              if (parse_args(endpoint_arg, &end) != 0)
+              return EXIT_FAILURE;
+              }           
+                 
+              if (!sum_only) {
+                cmpb       $0x0,0x2b(%rsp)
+              ↓ je         632  
+          be:   mov        %rbp,%rdi
+              → call       isqrt.part.0
+                mov        %rax,%rbx
+              printf("Set endpoint to %lu\n", end);
+              printf("Starting Search...\n");
+              }           
+                 
+              if (primes_capacity < isqrt(end) / 2 + 16)
+                shr        $1,%rax
+                add        $0x10,%rax
+                cmp        $0x40,%rax
+              ↓ jbe        14b  
+              if (n == 0) 
+              → call       isqrt.part.0
+              → call       isqrt.part.0
+              unsigned char *is_composite = calloc(root + 1, 1);
+                lea        0x1(%rbx),%rdi
+                mov        $0x1,%esi
+              → call       calloc@plt
+                mov        %rax,%r13
+              if (is_composite == NULL) {
+                test       %rax,%rax
+              ↓ je         6a8  
+              is_composite[0] = 1;
+                movw       $0x101,(%rax)
+              for (uint32_t p = 2; p <= root; p++) {
+              ↓ jmp        175  
+              for (int i = 1; i < argc; ++i) {
+         101:   cmp        $0x3,%ebx
+              ↓ jne        6c5  
+              if (strcmp(argv[i], "--sum-only") == 0) {
+                mov        0x10(%rbp),%rbx
+                mov        %r13,%rsi
+                mov        %rbx,%rdi
+              → call       strcmp@plt
+              sum_only = true;
+                movb       $0x1,0x2b(%rsp)
+              if (strcmp(argv[i], "--sum-only") == 0) {
+                test       %eax,%eax
+              ↑ je         68   
+              printf("Unknown argument: %s\n", argv[i]);
+                mov        %rbx,%rsi
+                lea        _IO_stdin_used+0x12f,%rdi
+                xor        %eax,%eax
+              → call       printf@plt
+              return EXIT_FAILURE;
+         137:   mov        $0x1,%eax
+              putchar('\n');
+              }           
+                 
+              free(base_primes);
+              return 0;   
+              }           
+         13c:   add        $0x48,%rsp
+                pop        %rbx 
+                pop        %rbp 
+                pop        %r12 
+                pop        %r13 
+                pop        %r14 
+                pop        %r15 
+              ← ret             
+         14b: → call       isqrt.part.0
+              unsigned char *is_composite = calloc(root + 1, 1);
+                lea        0x1(%rbx),%rdi
+                mov        $0x1,%esi
+              → call       calloc@plt
+                mov        %rax,%r13
+              if (is_composite == NULL) {
+                test       %rax,%rax
+              ↓ je         6a8  
+              is_composite[0] = 1;
+                movw       $0x101,(%rax)
+              for (uint32_t p = 2; p <= root; p++) {
+                cmp        $0x1,%rbx
+              ↓ jbe        1dc  
+              end = 1ull << 31;
+         175:   mov        $0x2,%ecx
+                mov        $0x2,%eax
+              ↓ jmp        1ab  
+                data16     cs nopw 0x0(%rax,%rax,1)
+                data16     cs nopw 0x0(%rax,%rax,1)
+                nop             
+              for (uint32_t p = 2; p <= root; p++) {
+         1a0:   lea        0x1(%rcx),%eax
+                mov        %rax,%rcx
+                cmp        %rax,%rbx
+              ↓ jb         1dc  
+              if (!is_composite[p]) {
+         1ab:   cmpb       $0x0,0x0(%r13,%rax,1)
+              ↑ jne        1a0  
+              uint64_t p_squared = p * p;
+                mov        %ecx,%edx
+                imul       %ecx,%edx
+                mov        %edx,%eax
+              if (p_squared > root) {
+                cmp        %rax,%rbx
+              ↓ jb         1dc  
+                nop             
+              is_composite[j] = 1;
+         1c0:   movb       $0x1,0x0(%r13,%rax,1)
+              for (uint32_t j = p_squared; j <= root; j += p) {
+                lea        (%rdx,%rcx,1),%eax
+                mov        %rax,%rdx
+                cmp        %rax,%rbx
+              ↑ jae        1c0  
+              for (uint32_t p = 2; p <= root; p++) {
+                lea        0x1(%rcx),%eax
+                mov        %rax,%rcx
+                cmp        %rax,%rbx
+              ↑ jae        1ab  
+              end = 1ull << 31;
+         1dc:   xor        %edx,%edx
+                xor        %r12d,%r12d
+              for (uint32_t i = 0; i <= root; i++) {
+                xor        %eax,%eax
+                data16     cs nopw 0x0(%rax,%rax,1)
+                data16     cs nopw 0x0(%rax,%rax,1)
+                nop             
+              count++;    
+         200:   cmpb       $0x1,0x0(%r13,%rax,1)
+              for (uint32_t i = 0; i <= root; i++) {
+                lea        0x1(%rdx),%eax
+              count++;    
+                adc        $0x0,%r12d
+              for (uint32_t i = 0; i <= root; i++) {
+                mov        %rax,%rdx
+                cmp        %rax,%rbx
+              ↑ jae        200  
+              uint32_t *primes = malloc(count * sizeof(uint32_t));
+                lea        0x0(,%r12,4),%rdi
+              → call       malloc@plt
+              uint32_t index = 0;
+                xor        %ecx,%ecx
+              for (uint32_t i = 0; i <= root; i++) {
+                xor        %edx,%edx
+              uint32_t *primes = malloc(count * sizeof(uint32_t));
+                mov        %rax,%r15
+              for (uint32_t i = 0; i <= root; i++) {
+                xor        %eax,%eax
+                data16     cs nopw 0x0(%rax,%rax,1)
+                cs         nopw 0x0(%rax,%rax,1)
+              if (!is_composite[i]) {
+         240:   cmpb       $0x0,0x0(%r13,%rdx,1)
+   0.00       ↓ jne        250  
+              primes[index++] = i;
+                mov        %ecx,%edx
+                inc        %ecx 
+                mov        %eax,(%r15,%rdx,4)
+              for (uint32_t i = 0; i <= root; i++) {
+         250:   lea        0x1(%rax),%edx
+                mov        %rdx,%rax
+                cmp        %rdx,%rbx
+              ↑ jae        240  
+              free(is_composite);
+                mov        %r13,%rdi
+              → call       free@plt
+              if (base_primes == NULL) {
+                test       %r15,%r15
+              ↓ je         6b4  
+              if (!sum_only) {
+                cmpb       $0x0,0x2b(%rsp)
+              ↓ je         5f3  
+              unsigned char *is_composite = calloc(block_size, 1);
+         277:   mov        $0x1,%esi
+                mov        $0x80000,%edi
+              → call       calloc@plt
+              uint64_t *next_cursor = malloc(base_prime_count * sizeof(uint64_t));
+                lea        0x0(,%r12,8),%rdi
+              unsigned char *is_composite = calloc(block_size, 1);
+                mov        %rax,%rbx
+              uint64_t *next_cursor = malloc(base_prime_count * sizeof(uint64_t));
+              → call       malloc@plt
+              for (uint32_t i = 0; i < base_prime_count; i++) {
+                xor        %ecx,%ecx
+                xor        %edx,%edx
+              uint64_t *next_cursor = malloc(base_prime_count * sizeof(uint64_t));
+                mov        %rax,%r14
+              for (uint32_t i = 0; i < base_prime_count; i++) {
+                test       %r12,%r12
+              ↓ je         2dd  
+                data16     cs nopw 0x0(%rax,%rax,1)
+                data16     cs nopw 0x0(%rax,%rax,1)
+                nop             
+              uint64_t p         = primes[i];
+         2c0:   mov        (%r15,%rdx,4),%eax
+              uint64_t p_squared = p * p;
+                imul       %rax,%rax
+              next_cursor[i] = (p_squared - 1) / 2;
+                dec        %rax 
+                shr        $1,%rax
+                mov        %rax,(%r14,%rdx,8)
+              for (uint32_t i = 0; i < base_prime_count; i++) {
+                lea        0x1(%rcx),%edx
+                mov        %rdx,%rcx
+                cmp        %r12,%rdx
+              ↑ jb         2c0  
+              if (is_composite == NULL || next_cursor == NULL) {
+         2dd:   test       %rbx,%rbx
+              ↓ je         659  
+                test       %r14,%r14
+              ↓ je         659  
+              u128        prime_sum            = 2;       // Adding 2 to start.
+                xor        %edx,%edx
+              uint64_t    total_primes_counter = 1;       // Counting 2
+                movq       $0x1,0x20(%rsp)
+              uint32_t       last_update  = 0;
+                xor        %eax,%eax
+              uint64_t low  = ((i * (uint64_t)block_size) * 2) + 1;
+                xor        %r10d,%r10d
+              u128        prime_sum            = 2;       // Adding 2 to start.
+                movq       $0x2,0x10(%rsp)
+              uint64_t high = (((i + 1) * (uint64_t)block_size) * 2) + 1;
+                mov        $0x100001,%r13d
+                mov        $0x1,%r9d
+                mov        $0x1,%r8d
+              u128        prime_sum            = 2;       // Adding 2 to start.
+                mov        %rdx,0x18(%rsp)
+                mov        %r10,%r11
+              uint32_t       last_update  = 0;
+                mov        %eax,0x2c(%rsp)
+              uint64_t low  = ((i * (uint64_t)block_size) * 2) + 1;
+                mov        $0x1,%eax
+                nop             
+              if (high > end) {
+         330:   cmp        %r13,%rbp
+                cmovbe     %rbp,%r13
+              uint64_t segment_size  = ((high_num - low_num + 1) / 2);
+                mov        %r13,%rcx
+                sub        %rax,%rcx
+                inc        %rcx 
+                shr        $1,%rcx
+              if (low_num == 1) {
+                cmp        $0x1,%rax
+              ↓ jne        34c  
+              is_composite[0] = 1;
+                movb       $0x1,(%rbx)
+              for (uint64_t i = 0; i < base_prime_count; i++) {
+         34c:   xor        %esi,%esi
+              uint64_t segment_base = (low_num - 1) / 2;
+                shr        $1,%r11
+              for (uint64_t i = 0; i < base_prime_count; i++) {
+                test       %r12,%r12
+              ↓ je         3ea  
+                mov        %rax,(%rsp)
+                xchg       %ax,%ax
+              uint64_t p         = primes[i];
+   0.00  360:   mov        (%r15,%rsi,4),%edi
+              if (p == 2) 
+   0.23         cmp        $0x2,%edi
+              ↓ je         3da  
+              uint64_t p_squared = p * p;
+   0.09         mov        %rdi,%rax
+   0.01         imul       %rdi,%rax
+              if (p_squared >= high_num)
+   0.11         cmp        %r13,%rax
+              ↓ jae        3e6  
+              uint64_t offset       = next_cursor[i] - segment_base;
+   0.04         mov        (%r14,%rsi,8),%r10
+   0.08         mov        %r10,%rax
+   0.01         sub        %r11,%rax
+              while (offset < segment_size) {
+   0.02         cmp        %rcx,%rax
+              ↓ jae        3d6  
+   0.05         cmp        $0x1,%edi
+              ↓ jne        520  
+                mov        %rax,%rdx
+              is_composite[offset] = 1;
+                movb       $0x1,(%rbx,%rax,1)
+              offset += p;
+                inc        %rax 
+                not        %rdx 
+                add        %rcx,%rdx
+                and        $0x1,%edx
+              while (offset < segment_size) {
+                cmp        %rcx,%rax
+              ↓ jae        3d2  
+                test       %rdx,%rdx
+              ↓ je         3c0  
+              is_composite[offset] = 1;
+                movb       $0x1,(%rbx,%rax,1)
+              offset += p;
+                inc        %rax 
+              while (offset < segment_size) {
+                cmp        %rcx,%rax
+              ↓ jae        3d2  
+                cs         nopw 0x0(%rax,%rax,1)
+              is_composite[offset] = 1;
+         3c0:   movb       $0x1,(%rbx,%rax,1)
+                movb       $0x1,0x1(%rbx,%rax,1)
+              offset += p;
+                add        $0x2,%rax
+              while (offset < segment_size) {
+                cmp        %rcx,%rax
+              ↑ jb         3c0  
+              next_cursor[i] = offset + segment_base;
+   0.15  3d2:   lea        (%r11,%rax,1),%r10
+   0.11  3d6:   mov        %r10,(%r14,%rsi,8)
+              for (uint64_t i = 0; i < base_prime_count; i++) {
+   0.38  3da:   inc        %rsi 
+                cmp        %rsi,%r12
+              ↑ jne        360  
+         3e6:   mov        (%rsp),%rax
+              for (uint64_t i = 0; i < segment_size; i++) {
+         3ea:   xor        %esi,%esi
+                xor        %edi,%edi
+                test       %rcx,%rcx
+              ↓ je         41b  
+                lea        (%rax,%rcx,2),%r10
+                mov        %rbx,%rdx
+                xor        %ecx,%ecx
+                xor        %esi,%esi
+                xor        %edi,%edi
+              if (!is_composite[i]) {
+   9.17  400:   cmpb       $0x0,(%rdx)
+  16.07       ↓ jne        40f  
+              segment_sum += low_num + (2 * i);
+  10.29         add        %rax,%rsi
+   5.73         adc        $0x0,%rdi
+              segment_count++;
+   1.25         inc        %rcx 
+              for (uint64_t i = 0; i < segment_size; i++) {
+   8.69  40f:   add        $0x2,%rax
+   0.24         inc        %rdx 
+   0.01         cmp        %r10,%rax
+              ↑ jne        400  
+              *out_p_count += segment_count;
+         41b:   add        %rcx,0x20(%rsp)
+              memset(is_composite, 0, block_size);
+                mov        $0x80000,%edx
+              *out_p_sum += segment_sum;
+                add        %rsi,0x10(%rsp)
+                mov        %r8,0x8(%rsp)
+                mov        %r9d,(%rsp)
+                adc        %rdi,0x18(%rsp)
+              memset(is_composite, 0, block_size);
+                xor        %esi,%esi
+                mov        %rbx,%rdi
+              → call       memset@plt
+              if (!sum_only)
+                cmpb       $0x0,0x2b(%rsp)
+                mov        (%rsp),%r9d
+                mov        0x8(%rsp),%r8
+              ↓ je         541  
+              uint64_t low  = ((i * (uint64_t)block_size) * 2) + 1;
+         456:   shl        $0x14,%r8
+                mov        %r8,%r11
+                lea        0x1(%r8),%rax
+              uint64_t high = (((i + 1) * (uint64_t)block_size) * 2) + 1;
+                lea        0x1(%r9),%r8d
+                mov        %r8,%r13
+                mov        %r8,%r9
+                shl        $0x14,%r13
+                inc        %r13 
+              if (low >= end) {
+                cmp        %rbp,%rax
+              ↑ jb         330  
+              free(next_cursor);
+                mov        %r14,%rdi
+              → call       free@plt
+              free(is_composite);
+                mov        %rbx,%rdi
+              → call       free@plt
+              if (!sum_only && isatty(STDERR_FILENO)) {
+                cmpb       $0x0,0x2b(%rsp)
+              ↓ jne        4d7  
+                mov        $0x2,%edi
+              → call       isatty@plt
+                test       %eax,%eax
+              ↓ jne        672  
+              printf("Found %lu primes [0, %lu)\n", total_primes_counter, end);
+         4a4:   mov        0x20(%rsp),%rsi
+                mov        %rbp,%rdx
+                lea        _IO_stdin_used+0x1de,%rdi
+                xor        %eax,%eax
+              → call       printf@plt
+              fputs("Sum of found primes is ", stdout);
+                mov        stdout@GLIBC_2.2.5,%rcx
+                mov        $0x17,%edx
+                mov        $0x1,%esi
+                lea        _IO_stdin_used+0x1f9,%rdi
+              → call       fwrite@plt
+              print_u128(stdout, prime_sum);
+         4d7:   mov        0x10(%rsp),%rax
+                mov        0x18(%rsp),%rdx
+                mov        stdout@GLIBC_2.2.5,%rdi
+                mov        %rax,%rsi
+              → call       print_u128
+                 
+              /* Write a character to stdout.  */
+              __STDIO_INLINE int
+              putchar (int __c)
+              {           
+              return putc (__c, stdout);
+                mov        stdout@GLIBC_2.2.5,%rsi
+                mov        $0xa,%edi
+              → call       putc@plt
+              free(base_primes);
+                mov        %r15,%rdi
+              → call       free@plt
+              return 0;   
+                xor        %eax,%eax
+              ↑ jmp        13c  
+                data16     cs nopw 0x0(%rax,%rax,1)
+                nop             
+              is_composite[offset] = 1;
+   1.49  520:   movb       $0x1,(%rbx,%rax,1)
+              offset += p;
+  23.58         add        %rdi,%rax
+              while (offset < segment_size) {
+   1.13         cmp        %rcx,%rax
+              ↑ jae        3d2  
+              is_composite[offset] = 1;
+   2.18         movb       $0x1,(%rbx,%rax,1)
+              offset += p;
+  16.41         add        %rdi,%rax
+              while (offset < segment_size) {
+   2.45         cmp        %rcx,%rax
+              ↑ jb         520  
+   0.06       ↑ jmp        3d2  
+              uint32_t current_update = high * updates / end;
+         541:   imul       $0x7d0,%r13,%r13
+                xor        %edx,%edx
+                mov        %r13,%rax
+                div        %rbp 
+                mov        %rax,%r13
+              if (current_update > *last_update && isatty(STDERR_FILENO)) {
+                cmp        %eax,0x2c(%rsp)
+              ↑ jae        456  
+                mov        $0x2,%edi
+              → call       isatty@plt
+                mov        (%rsp),%r9d
+                mov        0x8(%rsp),%r8
+                test       %eax,%eax
+              ↑ je         456  
+              100.0 * current_update / updates);
+                vxorpd     %xmm1,%xmm1,%xmm1
+              fprintf(stderr, "\rPrime count: %-10lu | Completion %%: %5.2f", *total_primes_counter,
+                mov        0x20(%rsp),%rdx
+                mov        stderr@GLIBC_2.2.5,%rdi
+                lea        _IO_stdin_used+0xc8,%rsi
+              100.0 * current_update / updates);
+                vcvtusi2sd %r13d,%xmm1,%xmm0
+              fprintf(stderr, "\rPrime count: %-10lu | Completion %%: %5.2f", *total_primes_counter,
+                mov        $0x1,%eax
+              100.0 * current_update / updates);
+                vmulsd     _IO_stdin_used+0x218,%xmm0,%xmm0
+              fprintf(stderr, "\rPrime count: %-10lu | Completion %%: %5.2f", *total_primes_counter,
+                vdivsd     0xb36(%rip),%xmm0,%xmm0        # 2220 <_IO_stdin_used+0x220>
+              → call       fprintf@plt
+              fflush(stderr);
+                mov        stderr@GLIBC_2.2.5,%rdi
+              → call       fflush@plt
+              *last_update = current_update;
+                mov        (%rsp),%r9d
+                mov        0x8(%rsp),%r8
+                mov        %r13d,0x2c(%rsp)
+              ↑ jmp        456  
+              printf("Usage: %s <endpoint> [--sum-only]\n", argv[0]);
+         5ce:   mov        (%rsi),%rsi
+                lea        _IO_stdin_used+0x8,%rdi
+                xor        %eax,%eax
+              → call       printf@plt
+              return EXIT_FAILURE;
+              ↑ jmp        137  
+              if (strcmp(argv[i], "--sum-only") == 0) {
+         5e4:   movb       $0x1,0x2b(%rsp)
+              end = 1ull << 31;
+                mov        $0x80000000,%ebp
+              ↑ jmp        be   
+              printf("Presieve complete.\n");
+         5f3:   lea        _IO_stdin_used+0x196,%rdi
+              → call       puts@plt
+              printf("Base Prime Count is %lu\n", base_prime_count);
+                mov        %r12,%rsi
+                lea        _IO_stdin_used+0x1a9,%rdi
+                xor        %eax,%eax
+              → call       printf@plt
+              printf("Starting segmented sieve...\n");
+                lea        _IO_stdin_used+0x1c2,%rdi
+              → call       puts@plt
+              ↑ jmp        277  
+              printf("No arguments found\n");
+         621:   lea        _IO_stdin_used+0x145,%rdi
+              end = 1ull << 31;
+                mov        $0x80000000,%ebp
+              printf("No arguments found\n");
+              → call       puts@plt
+              printf("Set endpoint to %lu\n", end);
+         632:   mov        %rbp,%rsi
+                lea        _IO_stdin_used+0x16e,%rdi
+                xor        %eax,%eax
+              → call       printf@plt
+              printf("Starting Search...\n");
+                lea        _IO_stdin_used+0x183,%rdi
+              → call       puts@plt
+                movb       $0x0,0x2b(%rsp)
+              ↑ jmp        be   
+              printf("Unable to allocate presieve composites array. Exiting...\n");
+         659:   lea        _IO_stdin_used+0x68,%rdi
+              → call       puts@plt
+              free(base_primes);
+                mov        %r15,%rdi
+              → call       free@plt
+              return EXIT_FAILURE;
+              ↑ jmp        137  
+              fprintf(stderr, "\rPrime count: %-10lu Completion %%: %3.2f \n", total_primes_counter, 100.00f);
+         672:   vmovsd     _IO_stdin_used+0x218,%xmm0
+                mov        0x20(%rsp),%rdx
+                lea        _IO_stdin_used+0xf8,%rsi
+                mov        $0x1,%eax
+                mov        stderr@GLIBC_2.2.5,%rdi
+              → call       fprintf@plt
+              fflush(stderr);
+                mov        stderr@GLIBC_2.2.5,%rdi
+              → call       fflush@plt
+              ↑ jmp        4a4  
+              printf("Unable to allocate presieve composites array. Exiting...\n");
+         6a8:   lea        _IO_stdin_used+0x68,%rdi
+              → call       puts@plt
+              printf("Error allocating primes array.\n");
+         6b4:   lea        _IO_stdin_used+0xa8,%rdi
+              → call       puts@plt
+              return EXIT_FAILURE;
+              ↑ jmp        137  
+              _Bool       sum_only             = false;
+         6c5:   movb       $0x0,0x2b(%rsp)
+              ↑ jmp        68   
+              printf("Invalid endpoint: %s\n", text);
+         6cf:   mov        %r12,%rsi
+                lea        _IO_stdin_used+0x158,%rdi
+                xor        %eax,%eax
+              → call       printf@plt
+              return -1;  
+              ↑ jmp        137  
+              printf("Endpoint too large, use a smaller number. Exiting...");
+         6e5:   lea        _IO_stdin_used+0x30,%rdi
+                xor        %eax,%eax
+              → call       printf@plt
+              return -1;  
+              ↑ jmp        137  
