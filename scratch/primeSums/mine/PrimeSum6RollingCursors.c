@@ -141,7 +141,7 @@ static uint32_t *pre_sieve(uint64_t end, uint64_t *base_prime_count) {
   return primes;
 }
 
-// Finds all primes below given end with given composite array.
+// Finds all primes from low to high with given composite array.
 static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, unsigned char *is_composite,
                           uint64_t *next_cursor, uint64_t high_num, uint64_t low_num,
                           u128 *out_p_sum, uint64_t *out_p_count) {
@@ -194,9 +194,17 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
                            _Bool sum_only) {
   uint32_t       last_update  = 0;
   unsigned char *is_composite = calloc(block_size, 1);
-
+  if (is_composite == NULL) {
+    printf("Unable to allocate presieve composites array. Exiting...\n");
+    return -1;
+  }
   // We initialize the rolling cursor array to eliminate a ton of our warm loop math.
   uint64_t *next_cursor = malloc(base_prime_count * sizeof(uint64_t));
+  if (next_cursor == NULL) {
+    printf("Unable to allocate full sieve cursor array. Exiting...\n");
+    free(is_composite);
+    return -1;
+  }
   for (uint32_t i = 0; i < base_prime_count; i++) {
     // Starting with p squared, as the first possible multiple.
     uint64_t p         = primes[i];
@@ -205,10 +213,6 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
     // We map that square to the odds-only index
     next_cursor[i] = (p_squared - 1) / 2;
   }
-  if (is_composite == NULL || next_cursor == NULL) {
-    printf("Unable to allocate presieve composites array. Exiting...\n");
-    return -1;
-  }
   // Set up a loop to iterate by segment[i]
   for (uint32_t i = 0;; i++) {
 
@@ -216,7 +220,7 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
     uint64_t low  = ((i * (uint64_t)block_size) * 2) + 1;
     uint64_t high = (((i + 1) * (uint64_t)block_size) * 2) + 1;
 
-    if (low >= end) {
+    if (low > end) {
       // If the segment low number jumps over the end, we're done.
       break;
     }
@@ -315,7 +319,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (!sum_only) {
-    printf("Found %lu primes [0, %lu)\n", total_primes_counter, end);
+    printf("Found %lu primes [0, %lu]\n", total_primes_counter, end);
     fputs("Sum of found primes is ", stdout);
     print_u128(stdout, prime_sum);
     putchar('\n');

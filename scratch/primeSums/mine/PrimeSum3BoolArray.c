@@ -64,12 +64,12 @@ static int resize_array(unsigned long **array, unsigned long *capacity) {
 }
 
 // Run initial prime search from 2 to sqrt(end), and return total primes counted.
-static int pre_sieve(unsigned long *primes, unsigned long *primes_capacity,
+static int pre_sieve(unsigned long **primes, unsigned long *primes_capacity,
                      unsigned long *base_prime_count, unsigned long start, unsigned long end) {
 
   _Bool composite = false;
   // Set the obvious 2 as prime.
-  primes[0]         = 2ul;
+  *primes[0]        = 2ul;
   *base_prime_count = 1ul;
 
   for (unsigned long i = start; i * i <= end; i++) {
@@ -83,11 +83,11 @@ static int pre_sieve(unsigned long *primes, unsigned long *primes_capacity,
     // 3 should not run at all.
     for (unsigned long j = 1; j < *base_prime_count; j++) {
       // Check i against our primes list so far.
-      if (i % primes[j] == 0) {
+      if (i % *primes[j] == 0) {
         // If divisible just break out immediately and set the 'composite' flag.
         composite = true;
         break;
-      } else if (primes[j] * primes[j] > i) {
+      } else if (*primes[j] * *primes[j] > i) {
         // If the prime is too big, it won't be a factor anyways, and we can end early.
         break;
       }
@@ -98,12 +98,12 @@ static int pre_sieve(unsigned long *primes, unsigned long *primes_capacity,
       // Now we check if *primes[] is big enough to fit our new number. Just in case.
       if (*base_prime_count >= *primes_capacity) {
         // Otherwise we resize this array.
-        if (resize_array(&primes, primes_capacity) != 0)
+        if (resize_array(primes, primes_capacity) != 0)
           return -1;
       }
 
       // Set the latest prime
-      primes[*base_prime_count] = i;
+      *primes[*base_prime_count] = i;
       // And update our counters for how many primes we've found.
       (*base_prime_count)++;
     }
@@ -118,7 +118,7 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
   unsigned long prime_count = 0;
   size_t        size        = ((end + 1) * sizeof(int));
   // First we create the flag sieve
-  int *isComposite = malloc(size);
+  int *isComposite = calloc(size, 1);
   if (isComposite == NULL) {
     printf("Error allocating flag sieve.\n");
     return 0;
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
 
   // Now run the pre_sieve for the primes < sqrt(end)
 
-  if (pre_sieve(primes, &primes_capacity, &base_prime_count, start, end) != 0) {
+  if (pre_sieve(&primes, &primes_capacity, &base_prime_count, start, end) != 0) {
     free(primes);
     return EXIT_FAILURE;
   }

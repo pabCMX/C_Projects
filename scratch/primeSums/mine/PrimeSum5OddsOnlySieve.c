@@ -141,7 +141,7 @@ static uint32_t *pre_sieve(uint64_t end, uint64_t *base_prime_count) {
   return primes;
 }
 
-// Finds all primes below given end with given composite array.
+// Finds all primes from low to high with given composite array.
 static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, unsigned char *is_composite,
                           uint64_t high_num, uint64_t low_num, u128 *out_p_sum,
                           uint64_t *out_p_count) {
@@ -219,7 +219,7 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
     unsigned long low  = ((i * block_size) * 2) + 1;
     unsigned long high = (((i + 1) * block_size) * 2) + 1;
 
-    if (low >= end) {
+    if (low > end) {
       // If the segment low number jumps over the end, we're done.
       break;
     }
@@ -317,7 +317,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (!sum_only) {
-    printf("Found %lu primes [0, %lu)\n", total_primes_counter, end);
+    printf("Found %lu primes [0, %lu]\n", total_primes_counter, end);
     fputs("Sum of found primes is ", stdout);
     print_u128(stdout, prime_sum);
     putchar('\n');
