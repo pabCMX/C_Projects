@@ -116,7 +116,7 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
                                 unsigned long long *prime_sum, unsigned long end, _Bool sum_only) {
 
   unsigned long prime_count = 0;
-  size_t        size        = end * sizeof(int);
+  size_t        size        = (end * sizeof(int)) + 1;
   // First we create the flag sieve
   int *isComposite = malloc(size);
   if (isComposite == NULL) {
@@ -135,7 +135,7 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
     unsigned long long p_mult = (unsigned long long)p * p;
 
     // Until we hit the end of the sieve.
-    while (p_mult < end) {
+    while (p_mult <= end) {
       isComposite[p_mult] = 1;
       // Then walk to the next multiple.
       p_mult += p;
@@ -150,7 +150,7 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
     fflush(stderr);
   }
   // Now we accumulate all primes:
-  for (unsigned long i = 0; i < end; i++) {
+  for (unsigned long i = 0; i <= end; i++) {
     if (!isComposite[i]) {
       *prime_sum += i;
       prime_count++;
@@ -171,8 +171,8 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
 }
 
 // Square Root of end prime search for bool array multiple stride alg to find sum of all primes
-// between 2 and 2^31 or given arg. ~18.5x better than the old mod, count, and sum version on ends
-// greater than ~2^23.
+// between 2 and 2^31 or given arg (inclusive). ~18.5x better than the old mod, count, and sum
+// version on ends greater than ~2^23.
 int main(int argc, char *argv[]) {
   const char        *endpoint_arg         = NULL;
   _Bool              sum_only             = false;

@@ -1,333 +1,156 @@
-#include <linux/limits.h>
-#include <stddef.h>
+// AI-GENERATED REFERENCE EXAMPLE — do not treat this as your chapter exercise work.
+//
+// This is one possible solution for the token-cost calculator project.
+// Build your own version in aiTokenCostCalculator.c, using LESSON_token_cost.html
+// as a guide. Peek here only when stuck.
+//
+// Build (example only):
+//   gcc -std=c23 -Wall -Wextra -pedantic -g aiTokenCostCalculator.example.c
+//     -o build/aiTokenCostCalculator.example.exe
+//
+// Usage:
+//   ./build/aiTokenCostCalculator.example.exe <csv-path> [year] [month]
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#define LINE_MAX 8192
+#define FIELD_MAX 32
+#define NAME_MAX 64
+#define MODEL_MAX 16
 
 typedef struct {
   double input_no_cache;
   double input_cache_write;
   double input_cache_read;
   double output;
-  double long_context_threshold;
+  long   long_context_threshold; // 0 means no long-context tier
   double long_input_no_cache;
   double long_input_cache_write;
   double long_input_cache_read;
   double long_output;
-} PricingRates;
+} Pricing;
 
 typedef struct {
-  char         name[64];
-  PricingRates rates;
+  char    name[NAME_MAX];
+  char    api_label[NAME_MAX];
+  Pricing rates;
 } ModelPricing;
 
 typedef struct {
-  char   name[64];
+  char   name[NAME_MAX];
   int    events;
-  long   no_cache;
   long   cache_write;
+  long   no_cache;
   long   cache_read;
   long   output;
+  int    long_context_events;
   double cost;
 } ModelStats;
 
-typedef struct {
-  char suffix[64];
-} Suffixes;
-
 static const ModelPricing MODEL_PRICING[] = {
-    {.name  = "composer-2.5",
-     .rates = {.input_no_cache    = 0.50,
-               .input_cache_write = 0.50,
-               .input_cache_read  = 0.20,
-               .output            = 2.50}},
-    {.name  = "composer-2.5-fast",
-     .rates = {.input_no_cache    = 3.00,
-               .input_cache_write = 3.00,
-               .input_cache_read  = 0.50,
-               .output            = 15.00}},
-    {.name  = "composer-2",
-     .rates = {.input_no_cache    = 0.50,
-               .input_cache_write = 0.50,
-               .input_cache_read  = 0.20,
-               .output            = 2.50}},
-    {.name  = "composer-2-fast",
-     .rates = {.input_no_cache    = 1.50,
-               .input_cache_write = 1.50,
-               .input_cache_read  = 0.35,
-               .output            = 7.50}},
-    {.name  = "composer-1.5",
-     .rates = {.input_no_cache    = 3.50,
-               .input_cache_write = 3.50,
-               .input_cache_read  = 0.35,
-               .output            = 17.50}},
-    {.name  = "composer-1",
-     .rates = {.input_no_cache    = 1.25,
-               .input_cache_write = 1.25,
-               .input_cache_read  = 0.125,
-               .output            = 10.00}},
-    {.name  = "gpt-5.5",
-     .rates = {.input_no_cache         = 3.00,
-               .input_cache_write      = 3.00,
-               .input_cache_read       = 0.50,
-               .output                 = 15.00,
-               .long_context_threshold = 272000,
-               .long_input_no_cache    = 10.00,
-               .long_input_cache_write = 10.00,
-               .long_input_cache_read  = 1.00,
-               .long_output            = 45.00}},
-    {.name  = "gpt-5.5-fast",
-     .rates = {.input_no_cache    = 12.50,
-               .input_cache_write = 12.50,
-               .input_cache_read  = 1.25,
-               .output            = 75.00}},
-    {.name  = "gpt-5.4",
-     .rates = {.input_no_cache    = 2.5,
-               .input_cache_write = 2.5,
-               .input_cache_read  = 0.25,
-               .output            = 15.00}},
-    {.name  = "gpt-5.3-codex",
-     .rates = {.input_no_cache    = 1.75,
-               .input_cache_write = 1.75,
-               .input_cache_read  = 0.175,
-               .output            = 14.00}},
-    {.name  = "gpt-5.3-codex-fast",
-     .rates = {.input_no_cache    = 3.50,
-               .input_cache_write = 3.50,
-               .input_cache_read  = 0.35,
-               .output            = 28.00}},
-    {.name  = "gpt-5.2",
-     .rates = {.input_no_cache    = 1.75,
-               .input_cache_write = 1.75,
-               .input_cache_read  = 0.175,
-               .output            = 14.00}},
-    {.name  = "gpt-5.2-fast",
-     .rates = {.input_no_cache    = 3.50,
-               .input_cache_write = 3.50,
-               .input_cache_read  = 0.35,
-               .output            = 28.00}},
-    {.name  = "gpt-5.2-codex",
-     .rates = {.input_no_cache    = 1.75,
-               .input_cache_write = 1.75,
-               .input_cache_read  = 0.175,
-               .output            = 14.00}},
-    {.name  = "gpt-5.1-codex-max",
-     .rates = {.input_no_cache    = 1.25,
-               .input_cache_write = 1.25,
-               .input_cache_read  = 0.125,
-               .output            = 10.00}},
-    {.name  = "gpt-5.1-codex-mini",
-     .rates = {.input_no_cache    = 0.25,
-               .input_cache_write = 0.25,
-               .input_cache_read  = 0.025,
-               .output            = 2.00}},
-    {.name  = "claude-opus-4-8",
-     .rates = {.input_no_cache    = 5.00,
-               .input_cache_write = 6.25,
-               .input_cache_read  = 0.50,
-               .output            = 25.00}},
-    {.name  = "claude-opus-4-8-fast",
-     .rates = {.input_no_cache    = 10.00,
-               .input_cache_write = 12.50,
-               .input_cache_read  = 1.00,
-               .output            = 50.00}},
-    {.name  = "claude-4.6-opus",
-     .rates = {.input_no_cache    = 5.00,
-               .input_cache_write = 6.25,
-               .input_cache_read  = 0.50,
-               .output            = 25.00}},
-    {.name  = "claude-4.6-opus-fast",
-     .rates = {.input_no_cache    = 30.00,
-               .input_cache_write = 37.50,
-               .input_cache_read  = 3.00,
-               .output            = 150.00}},
-    {.name  = "claude-4.5-opus",
-     .rates = {.input_no_cache    = 5.00,
-               .input_cache_write = 6.25,
-               .input_cache_read  = 0.50,
-               .output            = 25.00}},
-    {.name  = "claude-4.6-sonnet",
-     .rates = {.input_no_cache    = 3.00,
-               .input_cache_write = 3.75,
-               .input_cache_read  = 0.30,
-               .output            = 15.00}},
-    {.name  = "claude-4.5-sonnet",
-     .rates = {.input_no_cache    = 3.00,
-               .input_cache_write = 3.75,
-               .input_cache_read  = 0.30,
-               .output            = 15.00}},
-    {.name  = "claude-fable-5",
-     .rates = {.input_no_cache    = 10.00,
-               .input_cache_write = 12.50,
-               .input_cache_read  = 1.00,
-               .output            = 50.00}},
-    {.name  = "gemini-3-pro-preview",
-     .rates = {.input_no_cache    = 2.00,
-               .input_cache_write = 2.00,
-               .input_cache_read  = 0.20,
-               .output            = 12.00}},
-    {.name  = "kimi-k2.5",
-     .rates = {.input_no_cache    = 0.60,
-               .input_cache_write = 0.60,
-               .input_cache_read  = 0.10,
-               .output            = 3.00}},
-    {.name  = "auto",
-     .rates = {.input_no_cache    = 0.50,
-               .input_cache_write = 0.50,
-               .input_cache_read  = 0.20,
-               .output            = 2.50}},
+    {
+        .name      = "composer-2.5-fast",
+        .api_label = "Cursor Composer 2.5 Fast",
+        .rates =
+            {
+                .input_no_cache    = 3.00,
+                .input_cache_write = 3.00,
+                .input_cache_read  = 0.50,
+                .output            = 15.00,
+            },
+    },
+    {
+        .name      = "gpt-5.5-medium",
+        .api_label = "OpenAI gpt-5.5",
+        .rates =
+            {
+                .input_no_cache         = 3.00,
+                .input_cache_write      = 3.00,
+                .input_cache_read       = 0.50,
+                .output                 = 15.00,
+                .long_context_threshold = 272000L,
+                .long_input_no_cache    = 10.00,
+                .long_input_cache_write = 10.00,
+                .long_input_cache_read  = 1.00,
+                .long_output            = 45.00,
+            },
+    },
+    {
+        .name      = "claude-fable-5-thinking-medium",
+        .api_label = "Anthropic Claude Fable 5",
+        .rates =
+            {
+                .input_no_cache    = 10.00,
+                .input_cache_write = 12.50,
+                .input_cache_read  = 1.00,
+                .output            = 50.00,
+            },
+    },
+    {
+        .name      = "claude-opus-4-8",
+        .api_label = "Anthropic Claude Opus 4.8",
+        .rates =
+            {
+                .input_no_cache    = 5.00,
+                .input_cache_write = 6.25,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
+            },
+    },
+    {
+        .name      = "claude-opus-4-8-thinking-high",
+        .api_label = "Anthropic Claude Opus 4.8 (high thinking)",
+        .rates =
+            {
+                .input_no_cache    = 5.00,
+                .input_cache_write = 6.25,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
+            },
+    },
+    {
+        .name      = "claude-opus-4-8-thinking-medium",
+        .api_label = "Anthropic Claude Opus 4.8 (medium thinking)",
+        .rates =
+            {
+                .input_no_cache    = 5.00,
+                .input_cache_write = 6.25,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
+            },
+    },
+    {
+        .name      = "claude-opus-4-8-thinking-low",
+        .api_label = "Anthropic Claude Opus 4.8 (low thinking)",
+        .rates =
+            {
+                .input_no_cache    = 5.00,
+                .input_cache_write = 6.25,
+                .input_cache_read  = 0.50,
+                .output            = 25.00,
+            },
+    },
+    {
+        .name      = "claude-opus-4-8-fast",
+        .api_label = "Anthropic Claude Opus 4.8 Fast mode",
+        .rates =
+            {
+                .input_no_cache    = 10.00,
+                .input_cache_write = 12.50,
+                .input_cache_read  = 1.00,
+                .output            = 50.00,
+            },
+    },
 };
 
-static const Suffixes REASONING_SUFFIXES[] = {{.suffix = "-xhigh"},  {.suffix = "-high"},
-                                              {.suffix = "-medium"}, {.suffix = "-low"},
-                                              {.suffix = "-none"},   {.suffix = "-thinking"}};
-
-static const char ERRORED_FIELD[32] = "Errored, No Charge";
-
-static const int FALLBACK_MODEL_INDEX = 26;
-
-#define MAX_MODELS 32
-
-static long parse_field_as_long(char *field) {
-  return strtol(field, NULL, 10);
-}
-
-static const ModelPricing *find_pricing(const char *model_name) {
-  // Creating a working copy of the model name to avoid modifying the original.
-
-  char working_name[64];
-  strncpy(working_name, model_name, sizeof(working_name) - 1);
-  working_name[sizeof(working_name) - 1] = '\0';
-  size_t model_count                     = sizeof(MODEL_PRICING) / sizeof(MODEL_PRICING[0]);
-  size_t working_name_length             = strlen(working_name);
-  int    is_fast                         = 0;
-  int    no_more_suffixes                = 0;
-
-  // First we try to match a straight model name exactly.
-
-  for (size_t i = 0; i < model_count; i++) {
-    if (strcmp(working_name, MODEL_PRICING[i].name) == 0) {
-      // If we find it directly, just return that.
-
-      return &MODEL_PRICING[i];
-    }
+static void trim_quotes(char *field) {
+  size_t len = strlen(field);
+  if (len >= 2 && field[0] == '"' && field[len - 1] == '"') {
+    memmove(field, field + 1, len - 2);
+    field[len - 2] = '\0';
   }
-
-  // Otherwise we attempt to strip everything besides the name starting with "-fast".
-
-  if (working_name_length >= 5 && strcmp(working_name + working_name_length - 5, "-fast") == 0) {
-    is_fast                               = 1;
-    working_name[working_name_length - 5] = '\0';
-  }
-
-  // Now onto 'thinking-[tier] and -[tier]' suffixes.
-
-  for (int pass = 0; pass < 2; pass++) {
-    // First we find the last hyphen in the working name.
-
-    char *last_hyphen = strrchr(working_name, '-');
-    // First we check if we found a hyphen. No hyphen means no more suffixes.
-    if (last_hyphen == NULL) {
-      no_more_suffixes = 1;
-      break;
-    }
-    // If we found a hyphen, we set no_more_suffixes to 1 to prep to break the loop.
-    no_more_suffixes = 1;
-    // Then we iterate through the list of suffixes one at a time.
-    for (size_t i = 0; i < sizeof(REASONING_SUFFIXES) / sizeof(REASONING_SUFFIXES[0]); i++) {
-      // If we find one, just set the end at the hyphen and break to the while loop.
-      if (strcmp(last_hyphen, REASONING_SUFFIXES[i].suffix) == 0) {
-        *last_hyphen     = '\0';
-        no_more_suffixes = 0;
-        break;
-      }
-    }
-    // If we didn't find a suffix, we break the loop early.
-    if (no_more_suffixes) {
-      break;
-    }
-  }
-
-  // Now we can match the working name to the list of models.
-  if (is_fast) {
-    strcat(working_name, "-fast");
-  }
-  // and we check with the exact same logic as the first name check.
-  for (size_t i = 0; i < model_count; i++) {
-    if (strcmp(working_name, MODEL_PRICING[i].name) == 0) {
-      // If we find it directly, just return that.
-      return &MODEL_PRICING[i];
-    }
-  }
-  // If we don't find it, we return the auto pricing.
-  return &MODEL_PRICING[FALLBACK_MODEL_INDEX];
-}
-
-static double calculate_row_cost(char *fields[], const ModelPricing *pricing) {
-  // First check the model pricing table size and init cost variable.
-  long       no_cache    = parse_field_as_long(fields[7]);
-  long       cache_read  = parse_field_as_long(fields[8]);
-  long       cache_write = parse_field_as_long(fields[6]);
-  long       output      = parse_field_as_long(fields[9]);
-  const long Mil         = 1'000'000;
-  double     cost        = 0.0;
-
-  // If we find it we check if we're over the long context threshold.
-  if (pricing->rates.long_context_threshold > 0.0 &&
-      no_cache + cache_read + cache_write >= pricing->rates.long_context_threshold) {
-    // if so we use the long costs.
-    cost += (no_cache * pricing->rates.long_input_no_cache) / Mil;
-    cost += (cache_read * pricing->rates.long_input_cache_read) / Mil;
-    cost += (cache_write * pricing->rates.long_input_cache_write) / Mil;
-    return cost += (output * pricing->rates.long_output) / Mil;
-  } else {
-    // Otherwise we use normal costs.
-    cost += (no_cache * pricing->rates.input_no_cache) / Mil;
-    cost += (cache_read * pricing->rates.input_cache_read) / Mil;
-    cost += (cache_write * pricing->rates.input_cache_write) / Mil;
-    return cost += (output * pricing->rates.output) / Mil;
-  }
-}
-
-static int accumulate_stats_from_row(ModelStats *stats, char *fields[], int *stats_count) {
-  // We create a found index to set data.
-  int found = -1;
-
-  // First check if we have the model name already in our list.
-  for (int i = 0; i < *stats_count; i++) {
-    if (strcmp(stats[i].name, fields[4]) == 0) {
-      // If a model name matches, we set the found index to the current stat index.
-      found = i;
-      // Then exit the stats checking loop.
-      break;
-    }
-  }
-
-  // If not, add it
-  if (found == -1) {
-    // We'll set found to the current stats max index.
-    found = *stats_count;
-    // Then update the max stats index.
-    (*stats_count)++;
-    // We copy the name directly from the field into the stats (making space for the final char).
-    strncpy(stats[found].name, fields[4], sizeof(stats[found].name) - 1);
-    // Then we add a null terminator.
-    stats[found].name[sizeof(stats[found].name) - 1] = '\0';
-  }
-
-  // Now we accumulate each of the model's statistics based on the current fields into the stats
-  // struct totals.
-  stats[found].events++;
-  stats[found].no_cache += parse_field_as_long(fields[7]);
-  stats[found].cache_read += parse_field_as_long(fields[8]);
-  stats[found].cache_write += parse_field_as_long(fields[6]);
-  stats[found].output += parse_field_as_long(fields[9]);
-  // Before we calculate cost, we need to find the model's pricing rates, and give them to the
-  // cost calc.
-  const ModelPricing *pricing = find_pricing(fields[4]);
-  stats[found].cost += calculate_row_cost(fields, pricing);
-
-  return 0;
 }
 
 static int split_csv_line(char *line, char *fields[], int max_fields) {
@@ -335,39 +158,35 @@ static int split_csv_line(char *line, char *fields[], int max_fields) {
   char *cursor = line;
 
   while (*cursor != '\0' && count < max_fields) {
-    // First we skip any newline cruft by scanning past it.
-    while (*cursor == '\n' || *cursor == '\r')
-      cursor++;
-    // Then we check if we're at the end of the line; break since we're done.
-    if (*cursor == '\0')
-      break;
-    // Now we assign field[x] = cursor *position* (not value) then increment count to x+1
     fields[count++] = cursor;
 
-    // Check for a starting " character to skip
     if (*cursor == '"') {
-      // Step back to the just assigned field, and assign it to the next position forward.
       fields[count - 1] = ++cursor;
-      // Note that we also move ourselves forward at the same time.
-
-      // Now we scan ahead until we either hit the line-end char or another "
-      while (*cursor != '\0' && *cursor != '"') {
-        cursor++;
+      while (*cursor != '\0') {
+        if (*cursor == '"') {
+          if (*(cursor + 1) == '"') {
+            memmove(cursor, cursor + 1, strlen(cursor));
+            cursor++;
+          } else {
+            *cursor = '\0';
+            cursor++;
+            if (*cursor == ',') {
+              cursor++;
+            }
+            break;
+          }
+        } else {
+          cursor++;
+        }
       }
-
-      // If we hit another ", replace it with a line-end char
-      if (*cursor == '"') {
-        *cursor = '\0';
-        cursor++;
-      }
-    } else {
-      // if we didn't hit a " char, we scan for either line-end, new-line, or ','
-      while (*cursor != '\0' && *cursor != ',' && *cursor != '\n') {
-        cursor++;
-      }
+      continue;
     }
-    // Once we hit either , or new-line; replace with line-end
-    if (*cursor == ',' || *cursor == '\n') {
+
+    while (*cursor != '\0' && *cursor != ',') {
+      cursor++;
+    }
+
+    if (*cursor == ',') {
       *cursor = '\0';
       cursor++;
     }
@@ -376,9 +195,111 @@ static int split_csv_line(char *line, char *fields[], int max_fields) {
   return count;
 }
 
+static long parse_token_count(const char *field) {
+  char   buffer[64];
+  size_t i = 0;
+
+  while (field[i] != '\0' && i + 1 < sizeof(buffer)) {
+    buffer[i] = field[i];
+    i++;
+  }
+  buffer[i] = '\0';
+  trim_quotes(buffer);
+
+  if (buffer[0] == '\0') {
+    return 0L;
+  }
+
+  return strtol(buffer, NULL, 10);
+}
+
+static int parse_iso_date(const char *field, int *year, int *month, int *day) {
+  char buffer[64];
+  strncpy(buffer, field, sizeof(buffer) - 1);
+  buffer[sizeof(buffer) - 1] = '\0';
+  trim_quotes(buffer);
+
+  return sscanf(buffer, "%d-%d-%d", year, month, day) == 3;
+}
+
+static const ModelPricing *find_pricing(const char *model_name) {
+  for (size_t i = 0; i < sizeof(MODEL_PRICING) / sizeof(MODEL_PRICING[0]); i++) {
+    if (strcmp(model_name, MODEL_PRICING[i].name) == 0) {
+      return &MODEL_PRICING[i];
+    }
+  }
+  return NULL;
+}
+
+static ModelStats *find_or_add_stats(ModelStats stats[], int *stats_count, const char *name) {
+  for (int i = 0; i < *stats_count; i++) {
+    if (strcmp(stats[i].name, name) == 0) {
+      return &stats[i];
+    }
+  }
+
+  if (*stats_count >= MODEL_MAX) {
+    return NULL;
+  }
+
+  ModelStats *slot = &stats[*stats_count];
+  strncpy(slot->name, name, sizeof(slot->name) - 1);
+  slot->name[sizeof(slot->name) - 1] = '\0';
+  (*stats_count)++;
+  return slot;
+}
+
+static int uses_long_context(const Pricing *rates, long cache_write, long no_cache,
+                             long cache_read) {
+  if (rates->long_context_threshold <= 0L) {
+    return 0;
+  }
+
+  long input_tokens = cache_write + no_cache + cache_read;
+  return input_tokens > rates->long_context_threshold;
+}
+
+static double event_cost(const Pricing *rates, long cache_write, long no_cache, long cache_read,
+                         long output, int *long_context_flag) {
+  if (uses_long_context(rates, cache_write, no_cache, cache_read)) {
+    *long_context_flag = 1;
+    return (cache_write * rates->long_input_cache_write + no_cache * rates->long_input_no_cache +
+            cache_read * rates->long_input_cache_read + output * rates->long_output) /
+           1000000.0;
+  }
+
+  *long_context_flag = 0;
+  return (cache_write * rates->input_cache_write + no_cache * rates->input_no_cache +
+          cache_read * rates->input_cache_read + output * rates->output) /
+         1000000.0;
+}
+
+static void print_usage(const char *program_name) {
+  printf("Usage: %s <csv-path> [year] [month]\n", program_name);
+  printf("\n");
+  printf("Examples:\n");
+  printf("  %s ~/Downloads/usage-events-2026-06-18.csv 2026 6\n", program_name);
+  printf("  %s ~/Downloads/usage-events-2026-06-18.csv\n", program_name);
+}
+
+static void get_current_year_month(int *year, int *month) {
+  time_t    now = time(NULL);
+  struct tm local_time;
+
+#if defined(_WIN32)
+  localtime_s(&local_time, &now);
+#else
+  localtime_r(&now, &local_time);
+#endif
+
+  *year  = local_time.tm_year + 1900;
+  *month = local_time.tm_mon + 1;
+}
+
 static int compare_stats_by_cost(const void *left, const void *right) {
   const ModelStats *a = left;
   const ModelStats *b = right;
+
   if (a->cost < b->cost) {
     return 1;
   }
@@ -389,76 +310,181 @@ static int compare_stats_by_cost(const void *left, const void *right) {
 }
 
 int main(int argc, char *argv[]) {
-
-  if (argc < 2) {
-    printf("Missing args. Usage: %s <csv-path>\n", argv[0]);
+  if (argc < 2 || argc > 4) {
+    print_usage(argv[0]);
     return 1;
   }
 
-  char      *path = argv[1];
-  char       line[8192];
-  char      *fields[32];
-  int        field_count       = 0;
-  ModelStats stats[MAX_MODELS] = {0};
-  int        stats_count       = 0;
-  double     total_cost        = 0;
-  long       total_no_cache    = 0;
-  long       total_cache_write = 0;
-  long       total_cache_read  = 0;
-  long       total_output      = 0;
+  const char *csv_path = argv[1];
+  int         filter_year;
+  int         filter_month;
 
-  // File opening with the filename path as first arg, and mode in second.
-  //  r = reading (file must exist),
-  //  w = writing (creates new or truncaes existing to zero length),
-  //  a = append to end, creates if !file, r+ = read and writing (file must exist)
-  //  w+ = read and write but creates if !file, a+ = read and append.
-  //  add b to any mode for binary files.
-  FILE *input = fopen(path, "r");
+  if (argc == 4) {
+    filter_year  = atoi(argv[2]);
+    filter_month = atoi(argv[3]);
+  } else if (argc == 2) {
+    get_current_year_month(&filter_year, &filter_month);
+  } else {
+    print_usage(argv[0]);
+    return 1;
+  }
+
+  if (filter_month < 1 || filter_month > 12) {
+    fprintf(stderr, "Error: month must be between 1 and 12.\n");
+    return 1;
+  }
+
+  FILE *input = fopen(csv_path, "r");
   if (input == NULL) {
-    printf("Error opening file %s, exiting...\n", path);
+    fprintf(stderr, "Error: could not open %s\n", csv_path);
     return 1;
   }
 
+  char line[LINE_MAX];
   if (fgets(line, sizeof(line), input) == NULL) {
-    printf("File was empty\n");
+    fprintf(stderr, "Error: CSV file is empty.\n");
+    fclose(input);
     return 1;
   }
+
+  ModelStats stats[MODEL_MAX];
+  int        stats_count    = 0;
+  int        matched_events = 0;
+  int        unknown_models = 0;
+  double     total_cost     = 0.0;
 
   while (fgets(line, sizeof(line), input) != NULL) {
-    field_count = split_csv_line(line, fields, 32);
-    if (field_count != 12) {
-      printf("Error reading line, bad field number:");
-      printf("%s", line);
+    char *fields[FIELD_MAX];
+    int   field_count = split_csv_line(line, fields, FIELD_MAX);
+
+    if (field_count < 10) {
       continue;
     }
-    // First check if field[3] is errored or not.
-    if (strcmp(fields[3], ERRORED_FIELD) == 0) {
-      // Just skip it.
+
+    for (int i = 0; i < field_count; i++) {
+      trim_quotes(fields[i]);
+    }
+
+    int year  = 0;
+    int month = 0;
+    int day   = 0;
+    if (!parse_iso_date(fields[0], &year, &month, &day)) {
       continue;
     }
-    // We start with the stats struct, all the current fields, and a pointer to the total stats
-    // index
-    accumulate_stats_from_row(stats, fields, &stats_count);
+
+    if (year != filter_year || month != filter_month) {
+      continue;
+    }
+
+    const char         *model_name = fields[4];
+    const ModelPricing *pricing    = find_pricing(model_name);
+    if (pricing == NULL) {
+      unknown_models++;
+      continue;
+    }
+
+    long cache_write = parse_token_count(fields[6]);
+    long no_cache    = parse_token_count(fields[7]);
+    long cache_read  = parse_token_count(fields[8]);
+    long output      = parse_token_count(fields[9]);
+
+    int    long_context = 0;
+    double cost =
+        event_cost(&pricing->rates, cache_write, no_cache, cache_read, output, &long_context);
+
+    ModelStats *model_stats = find_or_add_stats(stats, &stats_count, model_name);
+    if (model_stats == NULL) {
+      fprintf(stderr, "Error: too many distinct models (max %d).\n", MODEL_MAX);
+      fclose(input);
+      return 1;
+    }
+
+    model_stats->events++;
+    model_stats->cache_write += cache_write;
+    model_stats->no_cache += no_cache;
+    model_stats->cache_read += cache_read;
+    model_stats->output += output;
+    model_stats->cost += cost;
+    if (long_context) {
+      model_stats->long_context_events++;
+    }
+
+    matched_events++;
+    total_cost += cost;
   }
+
   fclose(input);
 
-  // Now we sort the stats by cost.
   qsort(stats, (size_t)stats_count, sizeof(ModelStats), compare_stats_by_cost);
 
-  // Now we print the stats starting with the header.
-  printf("%-32s %12s %12s %12s %12s %12s\n", "Model", "Input Tks", "Cache Writes", "Cache Read",
-         "Output", "Cost");
-  for (int i = 0; i < stats_count; i++) {
-    total_cost += stats[i].cost;
-    total_no_cache += stats[i].no_cache;
-    total_cache_write += stats[i].cache_write;
-    total_cache_read += stats[i].cache_read;
-    total_output += stats[i].output;
-    printf("%-32s %12ld %12ld %12ld %12ld %12.2f\n", stats[i].name, stats[i].no_cache,
-           stats[i].cache_write, stats[i].cache_read, stats[i].output, stats[i].cost);
+  printf("Token cost estimate for %d-%02d\n", filter_year, filter_month);
+  printf("Source: %s\n", csv_path);
+  printf("Matched events: %d\n", matched_events);
+  if (unknown_models > 0) {
+    printf("Skipped unknown models: %d events\n", unknown_models);
   }
-  printf("%-32s %12ld %12ld %12ld %12ld %12.2f\n", "Total", total_no_cache, total_cache_write,
-         total_cache_read, total_output, total_cost);
+  printf("\n");
+
+  if (matched_events == 0) {
+    printf("No matching usage events found.\n");
+    return 0;
+  }
+
+  printf("Total API-equivalent cost: $%.2f\n\n", total_cost);
+
+  printf("%-34s %7s %11s %11s %9s %10s %7s\n", "Model", "Events", "In (no c)", "Cache read",
+         "Output", "Cost", "Share");
+  printf("%-34s %7s %11s %11s %9s %10s %7s\n", "----------------------------------", "-------",
+         "-----------", "-----------", "---------", "----------", "-------");
+
+  for (int i = 0; i < stats_count; i++) {
+    const ModelStats   *row     = &stats[i];
+    const ModelPricing *pricing = find_pricing(row->name);
+    double              share   = total_cost > 0.0 ? (row->cost / total_cost) * 100.0 : 0.0;
+
+    char no_cache_buf[16];
+    char cache_read_buf[16];
+    char output_buf[16];
+
+    snprintf(no_cache_buf, sizeof(no_cache_buf), "%.2fM", row->no_cache / 1000000.0);
+    snprintf(cache_read_buf, sizeof(cache_read_buf), "%.2fM", row->cache_read / 1000000.0);
+    snprintf(output_buf, sizeof(output_buf), "%.2fM", row->output / 1000000.0);
+
+    printf("%-34s %7d %11s %11s %9s $%8.2f %6.1f%%", row->name, row->events, no_cache_buf,
+           cache_read_buf, output_buf, row->cost, share);
+
+    if (pricing != NULL && row->long_context_events > 0) {
+      printf("  (%d long-context)", row->long_context_events);
+    }
+    printf("\n");
+  }
+
+  printf("\nPricing notes:\n");
+  for (size_t i = 0; i < sizeof(MODEL_PRICING) / sizeof(MODEL_PRICING[0]); i++) {
+    const ModelPricing *entry = &MODEL_PRICING[i];
+    int                 seen  = 0;
+
+    for (int j = 0; j < stats_count; j++) {
+      if (strcmp(stats[j].name, entry->name) == 0) {
+        seen = 1;
+        break;
+      }
+    }
+
+    if (!seen) {
+      continue;
+    }
+
+    printf("- %s (%s): $%.2f/M in, $%.2f/M cache write, $%.2f/M cache read, $%.2f/M out",
+           entry->name, entry->api_label, entry->rates.input_no_cache,
+           entry->rates.input_cache_write, entry->rates.input_cache_read, entry->rates.output);
+
+    if (entry->rates.long_context_threshold > 0L) {
+      printf("; long context above %ld input tokens uses 2x input and 1.5x output rates",
+             entry->rates.long_context_threshold);
+    }
+    printf("\n");
+  }
 
   return 0;
 }
