@@ -156,7 +156,7 @@ static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, unsigned 
   }
 
   // Then we iterate through every prime in primes[] that has a multiple within the segment.
-  for (unsigned long i = 0; i < base_prime_count; i++) {
+  for (uint64_t i = 0; i < base_prime_count; i++) {
     uint64_t p = primes[i];
 
     if (p == 2)
@@ -224,7 +224,7 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
       break;
     }
     if (high > end) {
-      high = end;
+      high = end + 1;
     }
     if (odds_seg_sieve(primes, base_prime_count, is_composite, high, low, prime_sum,
                        total_primes_counter) != 0)

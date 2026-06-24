@@ -221,7 +221,7 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
       break;
     }
     if (high > end) {
-      high = end;
+      high = end + 1;
     }
 
     if (odds_seg_sieve(primes, base_prime_count, is_composite, next_cursor, high, low, prime_sum,
