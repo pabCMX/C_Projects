@@ -41,7 +41,7 @@ static void print_u128(FILE *f, u128 v) {
 
   while (v > 0) {
     // A little terse but in short, for a given buffer slot, we take the last digit of the num, and
-    // cast it to a char. Since chararacters are treated as ints, we can 'add' to get the right
+    // cast it to a char. Since characters are treated as ints, we can 'add' to get the right
     // digit character in binary.
     buffer[n++] = (char)('0' + (v % 10));
     // Then we divide by 10, truncating the number by one decimal place.

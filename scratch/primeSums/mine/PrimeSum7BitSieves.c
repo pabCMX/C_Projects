@@ -41,7 +41,7 @@ static void print_u128(FILE *f, u128 v) {
 
   while (v > 0) {
     // A little terse but in short, for a given buffer slot, we take the last digit of the num, and
-    // cast it to a char. Since chararacters are treated as ints, we can 'add' to get the right
+    // cast it to a char. Since characters are treated as ints, we can 'add' to get the right
     // digit character in binary.
     buffer[n++] = (char)('0' + (v % 10));
     // Then we divide by 10, truncating the number by one decimal place.
@@ -127,6 +127,12 @@ static uint32_t *pre_sieve(uint64_t end, uint64_t *base_prime_count) {
 
   // Then allocate the base_primes array.
   uint32_t *primes = malloc(count * sizeof(uint32_t));
+  if (primes == NULL) {
+    printf("Unable to allocate base primes array. Exiting...\n");
+    free(is_composite);
+    return NULL;
+  }
+
   // And fill it.
   uint32_t index = 0;
   for (uint32_t i = 0; i <= root; i++) {
@@ -142,9 +148,9 @@ static uint32_t *pre_sieve(uint64_t end, uint64_t *base_prime_count) {
 }
 
 // Finds all primes from low to high with given composite array.
-static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint64_t *is_composite,
-                          uint64_t *next_cursor, uint64_t high_num, uint64_t low_num,
-                          u128 *out_p_sum, uint64_t *out_p_count) {
+static void odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint64_t *is_composite,
+                           uint64_t *next_cursor, uint64_t high_num, uint64_t low_num,
+                           u128 *out_p_sum, uint64_t *out_p_count) {
 
   u128     segment_sum    = 0;
   uint64_t segment_count  = 0;
@@ -199,7 +205,6 @@ static int odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint64_t 
   }
   *out_p_count += segment_count;
   *out_p_sum += segment_sum;
-  return 0;
 }
 
 // Sets up and manages the main sieve loop.
@@ -243,9 +248,8 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint32_t
       high = end + 1;
     }
 
-    if (odds_seg_sieve(primes, base_prime_count, is_composite, next_cursor, high, low, prime_sum,
-                       total_primes_counter) != 0)
-      return -1;
+    odds_seg_sieve(primes, base_prime_count, is_composite, next_cursor, high, low, prime_sum,
+                   total_primes_counter);
     // Reset for next cycle
     memset(is_composite, 0, nwords * sizeof(*is_composite));
     if (!sum_only)
@@ -265,7 +269,6 @@ int main(int argc, char *argv[]) {
   uint64_t    end                  = 1;
   u128        prime_sum            = 2;       // Adding 2 to start.
   uint64_t    total_primes_counter = 1;       // Counting 2
-  uint64_t    primes_capacity      = 64;      // Base primes array size.
   uint64_t    base_prime_count     = 0;       // Primes in sqrt(end) base sieve array.
   uint32_t    block_size           = 1 << 18; // Segment size (~32KiB of bits).
   if (argc > 3) {
@@ -302,15 +305,12 @@ int main(int argc, char *argv[]) {
     printf("Set endpoint to %lu\n", end);
     printf("Starting Search...\n");
   }
-
-  if (primes_capacity < isqrt(end) / 2 + 16)
-    primes_capacity = isqrt(end) / 2 + 16; // Lazy fudge for presize.
   // Late assign/alloc so we don't have to free on each possible error before now.
 
   // Now run the pre_sieve for the primes < sqrt(end)
   uint32_t *base_primes = pre_sieve(end, &base_prime_count);
   if (base_primes == NULL) {
-    printf("Error allocating primes array.\n");
+    printf("Error in base primes search.\n");
     free(base_primes);
     return EXIT_FAILURE;
   }
