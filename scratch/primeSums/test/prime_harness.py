@@ -108,7 +108,9 @@ def standard_endpoints(max_exp: int) -> list[Endpoint]:
         rows.append(Endpoint(f"5*2^{exp-2}", 5 * (base >> 2), "non_power"))
 
     block_size = 1 << 19
-    for segment in [1, 2, 4, 8, 16]:
+    # Include prime segment-high endpoints too. Missing the inclusive endpoint
+    # at a segment boundary has been a common bug in early implementations.
+    for segment in [1, 2, 4, 7, 8, 13, 16, 22, 25, 27]:
         high = 2 * segment * block_size + 1
         rows.append(Endpoint(f"seg{segment}_end-1", high - 1, "segment_edge"))
         rows.append(Endpoint(f"seg{segment}_end", high, "segment_edge"))
@@ -118,25 +120,18 @@ def standard_endpoints(max_exp: int) -> list[Endpoint]:
 
 
 def bench_endpoints(max_exp: int) -> list[Endpoint]:
-    rows: list[Endpoint] = []
+    rows: list[Endpoint] = standard_endpoints(max_exp)
 
-    for n in [2, 3, 5, 10, 100, 1000, 10000, 100000]:
-        rows.append(Endpoint(f"small_{n}", n, "small"))
-
-    for exp in range(4, max_exp + 1):
-        rows.append(Endpoint(f"2^{exp}", 1 << exp, "power"))
-
-    selected_edges = sorted({4, 10, 19, 20, 24, 28, 32, 34, 36, max_exp})
-    for exp in selected_edges:
-        if exp > max_exp:
-            continue
-        base = 1 << exp
-        rows.append(Endpoint(f"2^{exp}-1", base - 1, "power_edge"))
-        rows.append(Endpoint(f"2^{exp}+1", base + 1, "power_edge"))
-
+    # Keep a few wider non-power points in the full benchmark suite. These are
+    # not needed for the quick test subset, but expected sums should cover them.
     for exp in range(16, max_exp + 1, 6):
         base = 1 << exp
         rows.append(Endpoint(f"3*2^{exp-1}", 3 * (base >> 1), "non_power"))
+
+    block_size = 1 << 19
+    for segment in [7, 13, 22, 25, 27]:
+        high = 2 * segment * block_size + 1
+        rows.append(Endpoint(f"prime_seg{segment}_end", high, "segment_prime"))
 
     return unique_endpoints(rows)
 
@@ -321,9 +316,16 @@ def measure_endpoint(
     times.append(first.elapsed)
     sums.append(first.stdout)
 
-    target_repeats = choose_target_repeats(first.elapsed, args)
+    target_repeats = args.runs
+    if args.adaptive_timing:
+        target_repeats = choose_target_repeats(first.elapsed, args)
+
     while len(times) < target_repeats:
-        if sum(times) >= args.min_sample_seconds and first.elapsed < args.low_threshold:
+        if (
+            args.adaptive_timing
+            and sum(times) >= args.min_sample_seconds
+            and first.elapsed < args.low_threshold
+        ):
             break
 
         if remaining_budget is not None and sum(times) >= remaining_budget:
@@ -585,6 +587,7 @@ def add_common_timing_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--slow-three-threshold", type=parse_positive_float, default=2.0)
     parser.add_argument("--slow-single-threshold", type=parse_positive_float, default=10.0)
     parser.add_argument("--per-run-timeout", type=parse_positive_float, default=None)
+    parser.set_defaults(adaptive_timing=True)
 
 
 def add_latency_args(parser: argparse.ArgumentParser) -> None:
@@ -594,10 +597,34 @@ def add_latency_args(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="PrimeSum test and benchmark suite")
+    parser = argparse.ArgumentParser(
+        description="PrimeSum test and benchmark suite",
+        epilog=(
+            "Default run setup:\n"
+            "  test:  standard endpoint subset through 2^34, 3 runs per endpoint, "
+            "0 warmups, no latency calibration, no adaptive timing.\n"
+            "  bench: full endpoint set through 2^40, 2 hour budget, 5 runs normally, "
+            "1 warmup, adaptive repeats for tiny/slow cases, latency calibration enabled.\n"
+            "  capture-sums: full bench endpoint set through 2^40."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    test_parser = subparsers.add_parser("test", help="quick correctness and timing sanity check")
+    test_parser = subparsers.add_parser(
+        "test",
+        help="quick correctness and timing sanity check",
+        epilog=(
+            "Default test setup:\n"
+            "  endpoint suite: standard subset\n"
+            "  max exponent:   34\n"
+            "  runs:           3 per endpoint\n"
+            "  warmups:        0\n"
+            "  timing:         fixed runs only; no adaptive repeats or latency calibration\n"
+            "  output:         table only unless --out is supplied"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     test_parser.add_argument("executable")
     test_parser.add_argument("--max-exp", type=parse_nonnegative_int, default=34)
     test_parser.add_argument("--endpoint-suite", choices=["standard", "bench"], default="standard")
@@ -607,9 +634,29 @@ def build_parser() -> argparse.ArgumentParser:
     test_parser.add_argument("--stop-on-failure", action="store_true")
     add_common_timing_args(test_parser)
     add_latency_args(test_parser)
-    test_parser.set_defaults(func=lambda args: run_suite(args, "test"))
+    test_parser.set_defaults(
+        adaptive_timing=False,
+        func=lambda args: run_suite(args, "test"),
+        latency_samples=0,
+        runs=3,
+        warmups=0,
+    )
 
-    bench_parser = subparsers.add_parser("bench", help="comparison benchmark up to budget or max exponent")
+    bench_parser = subparsers.add_parser(
+        "bench",
+        help="comparison benchmark up to budget or max exponent",
+        epilog=(
+            "Default bench setup:\n"
+            "  endpoint suite: full bench set, including every test endpoint\n"
+            "  max exponent:   40\n"
+            "  time budget:    7200 seconds per program\n"
+            "  runs:           5 normally, adaptive for tiny and slow cases\n"
+            "  warmups:        1 per endpoint\n"
+            "  latency:        7 /usr/bin/true samples, 1 second apart\n"
+            "  output:         appends rows to baseline/program-runs.tsv"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     bench_parser.add_argument("executable")
     bench_parser.add_argument("--max-exp", type=parse_nonnegative_int, default=40)
     bench_parser.add_argument("--endpoint-suite", choices=["standard", "bench"], default="bench")
@@ -624,7 +671,7 @@ def build_parser() -> argparse.ArgumentParser:
     capture_sums_parser = subparsers.add_parser("capture-sums", help="capture expected sums from reference")
     capture_sums_parser.add_argument("reference")
     capture_sums_parser.add_argument("--max-exp", type=parse_nonnegative_int, default=40)
-    capture_sums_parser.add_argument("--endpoint-suite", choices=["standard", "bench"], default="standard")
+    capture_sums_parser.add_argument("--endpoint-suite", choices=["standard", "bench"], default="bench")
     capture_sums_parser.add_argument("--out", default=str(DEFAULT_EXPECTED))
     capture_sums_parser.add_argument("--per-run-timeout", type=parse_positive_float, default=None)
     capture_sums_parser.set_defaults(func=command_capture_sums)

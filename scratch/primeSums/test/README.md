@@ -10,8 +10,9 @@ One wrapper drives the suite:
 
 ## Modes
 
-- `test` checks one executable against the standard endpoint set through `2^34` by default.
-- `bench` records comparison data through `2^40` unless the two-hour time budget runs out.
+- `test` checks one executable against the standard endpoint subset through `2^34` by default.
+  It runs each endpoint 3 times by default, with no warmup or adaptive timing loop.
+- `bench` records comparison data for the full endpoint set through `2^40` unless the two-hour time budget runs out.
 - `capture-sums` writes `baseline/expected-sums.tsv` from a trusted reference executable.
 - `capture-all` benchmarks all discovered `mine/*.c` and `ai/*.c` programs.
 - `latency` measures Python subprocess overhead with repeated `/usr/bin/true` launches.
@@ -23,8 +24,11 @@ One wrapper drives the suite:
 ./prime-suite.sh capture-all --time-budget 7200
 ```
 
-Tiny inputs are timed with repeated fresh subprocess launches. That intentionally includes
-program startup and setup drag. The `/usr/bin/true` latency measurement is reported beside
-benchmarks for context, but it is not subtracted from program timings.
+Use `./prime-suite.sh test <exec> --runs 5` if you want five correctness runs per endpoint.
+The heavier repeated timing and `/usr/bin/true` latency measurement are reserved for `bench`.
+
+The test endpoint set includes small values, powers, `2^x ± 1`, non-powers,
+segment edges, and prime segment-high endpoints such as `7340033`. The bench
+endpoint set is a superset of the test set.
 
 Old `bench-*` scripts and captures are archived under `archive/`.
