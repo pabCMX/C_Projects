@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
   uint64_t    total_primes_counter = 1;       // Counting 2
   uint64_t    primes_capacity      = 64;      // Base primes array size.
   uint64_t    base_prime_count     = 0;       // Primes in sqrt(end) base sieve array.
-  uint64_t    block_size           = 1 << 19; // Segment size (~512KiB of unsigned char).
+  uint32_t    block_size           = 1 << 19; // Segment size (~512KiB of unsigned char).
   if (argc > 3) {
     // If we get too many arguments, exit with error
     printf("Usage: %s <endpoint> [--sum-only]\n", argv[0]);

@@ -1,22 +1,23 @@
 #ifndef _WIN32
 #define _DEFAULT_SOURCE
-#include <unistd.h>
+#include <stdint.h>
 #endif
 
 #include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 
-unsigned long isqrt(unsigned long n) {
+uint64_t isqrt(uint64_t n) {
   if (n == 0)
     return 0;
 
-  unsigned long lo = 1;
-  unsigned long hi = n;
+  uint64_t lo = 1;
+  uint64_t hi = n;
 
   while (lo < hi) {
-    unsigned long mid = lo + (hi - lo + 1) / 2;
+    uint64_t mid = lo + (hi - lo + 1) / 2;
     if (mid <= n / mid) {
       lo = mid;
     } else {
@@ -26,7 +27,7 @@ unsigned long isqrt(unsigned long n) {
   return lo;
 }
 
-static int parse_args(const char *text, unsigned long *end, unsigned long *primes_capacity) {
+static int parse_args(const char *text, uint64_t *end, uint32_t *primes_capacity) {
   char *endptr;
   errno = 0;
   *end  = strtoull(text, &endptr, 10);
@@ -42,12 +43,12 @@ static int parse_args(const char *text, unsigned long *end, unsigned long *prime
   return 0;
 }
 
-static int resize_array(unsigned long **array, unsigned long *capacity) {
+static int resize_array(uint32_t **array, uint32_t *capacity) {
   // Otherwise we expand by 2x primes_capacity.
-  unsigned long new_capacity = *capacity * 2ul;
+  uint32_t new_capacity = *capacity * 2ul;
 
   // Create a temporary array *pointer* to a bigger array.
-  unsigned long *tmp = realloc(*array, new_capacity * sizeof(**array));
+  uint32_t *tmp = realloc(*array, new_capacity * sizeof(**array));
 
   // Handle errors.
   if (tmp == NULL) {
@@ -63,32 +64,40 @@ static int resize_array(unsigned long **array, unsigned long *capacity) {
   return 0;
 }
 
-// Run initial prime search from 2 to sqrt(end), and return total primes counted.
-static int pre_sieve(unsigned long **primes, unsigned long *primes_capacity,
-                     unsigned long *base_prime_count, unsigned long start, unsigned long end) {
+static int pre_sieve(uint32_t **primes, uint32_t *primes_capacity, uint32_t *base_prime_count,
+                     uint32_t start, uint64_t end) {
 
   _Bool composite = false;
   // Set the obvious 2 as prime.
-  *primes[0]        = 2ul;
-  *base_prime_count = 1ul;
+  (*primes)[0]      = 2u;
+  *base_prime_count = 1u;
 
-  for (unsigned long i = start; i * i <= end; i++) {
+  for (uint64_t i = start;; i++) {
     // Skip evens
     if (i % 2 == 0) {
       continue;
     }
+
+    uint64_t i_squared = i * i;
+    // If i squared passes the end, we've checked past the root of end and can stop.
+    if (i_squared > end)
+      break;
+
     // Reset flag.
     composite = false;
     // We setup a loop, and make sure to skip 2 since we already know i isn't even.
     // 3 should not run at all.
-    for (unsigned long j = 1; j < *base_prime_count; j++) {
-      // Check i against our primes list so far.
-      if (i % *primes[j] == 0) {
-        // If divisible just break out immediately and set the 'composite' flag.
-        composite = true;
+    for (uint32_t j = 1; j < *base_prime_count; j++) {
+      uint64_t p         = (*primes)[j];
+      uint64_t p_squared = p * p;
+
+      // If our prime^2 is bigger than i, no sense checking it or any other prime.
+      if (p_squared > i)
         break;
-      } else if (*primes[j] * *primes[j] > i) {
-        // If the prime is too big, it won't be a factor anyways, and we can end early.
+      // Check i against our primes list so far.
+      if (i % p == 0) {
+        // If divisible just break and set the 'composite' flag.
+        composite = true;
         break;
       }
     }
@@ -103,7 +112,7 @@ static int pre_sieve(unsigned long **primes, unsigned long *primes_capacity,
       }
 
       // Set the latest prime
-      *primes[*base_prime_count] = i;
+      (*primes)[*base_prime_count] = i;
       // And update our counters for how many primes we've found.
       (*base_prime_count)++;
     }
@@ -112,13 +121,12 @@ static int pre_sieve(unsigned long **primes, unsigned long *primes_capacity,
   return 0;
 }
 
-static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_count,
-                                unsigned long long *prime_sum, unsigned long end, _Bool sum_only) {
+static uint32_t full_sieve(uint32_t *primes, uint32_t base_prime_count, uint64_t *prime_sum,
+                           uint64_t end, _Bool sum_only) {
 
-  unsigned long prime_count = 0;
-  size_t        size        = ((end + 1) * sizeof(int));
+  uint32_t prime_count = 0;
   // First we create the flag sieve
-  int *isComposite = calloc(size, 1);
+  unsigned char *isComposite = calloc(end + 1, 1);
   if (isComposite == NULL) {
     printf("Error allocating flag sieve.\n");
     return 0;
@@ -129,10 +137,10 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
   // Then we iterate through every prime in primes[]
   if (!sum_only)
     printf("Starting composite marking...\n");
-  for (unsigned long i = 0; i < base_prime_count; i++) {
-    unsigned long p = primes[i];
+  for (uint32_t i = 0; i < base_prime_count; i++) {
+    uint32_t p = primes[i];
     // Starting at p * p
-    unsigned long long p_mult = (unsigned long long)p * p;
+    uint64_t p_mult = (uint64_t)p * p;
 
     // Until we hit the end of the sieve.
     while (p_mult <= end) {
@@ -150,13 +158,13 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
     fflush(stderr);
   }
   // Now we accumulate all primes:
-  for (unsigned long i = 0; i <= end; i++) {
+  for (uint64_t i = 0; i <= end; i++) {
     if (!isComposite[i]) {
       *prime_sum += i;
       prime_count++;
     }
     if (!sum_only && i % 100000 == 0 && isatty(STDERR_FILENO)) {
-      fprintf(stderr, "\rPrime count: %-10lu | Sum: %20llu | Completion %%: %3.2f", prime_count,
+      fprintf(stderr, "\rPrime count: %-10u | Sum: %20lu | Completion %%: %3.2f", prime_count,
               *prime_sum, (i * 100.0) / end);
       fflush(stderr);
     }
@@ -174,14 +182,14 @@ static unsigned long full_sieve(unsigned long *primes, unsigned long base_prime_
 // between 2 and 2^31 or given arg (inclusive). ~18.5x better than the old mod, count, and sum
 // version on ends greater than ~2^23.
 int main(int argc, char *argv[]) {
-  const char        *endpoint_arg         = NULL;
-  _Bool              sum_only             = false;
-  unsigned long      end                  = 1;
-  unsigned long      start                = 3;
-  unsigned long long prime_sum            = 0;
-  unsigned long      total_primes_counter = 0;
-  unsigned long      primes_capacity      = 64;
-  unsigned long      base_prime_count     = 0;
+  const char *endpoint_arg         = NULL;
+  _Bool       sum_only             = false;
+  uint64_t    end                  = 1;
+  uint32_t    start                = 3;
+  uint64_t    prime_sum            = 0;
+  uint64_t    total_primes_counter = 0;
+  uint32_t    primes_capacity      = 64;
+  uint32_t    base_prime_count     = 0;
 
   if (argc > 3) {
     // If we get too many arguments, exit with error
@@ -208,7 +216,7 @@ int main(int argc, char *argv[]) {
       printf("No arguments found\n");
   } else {
     // If we got an argument to sum to,
-    // we convert from text to an unsigned long long int with strtoull()
+    // we convert from text to an uint64_t int with strtoull()
     if (parse_args(endpoint_arg, &end, &primes_capacity) != 0)
       return EXIT_FAILURE;
   }
@@ -219,7 +227,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Late assignment so we don't have to free on each possible error before now.
-  unsigned long *primes = malloc(primes_capacity * sizeof(*primes));
+  uint32_t *primes = malloc(primes_capacity * sizeof(uint32_t));
 
   // Handle errors
   if (primes == NULL) {
@@ -248,9 +256,9 @@ int main(int argc, char *argv[]) {
 
   if (!sum_only) {
     printf("Found %lu primes from 2 to %lu inclusive.\n", total_primes_counter, end);
-    printf("Sum of found primes is %llu\n", prime_sum);
+    printf("Sum of found primes is %lu\n", prime_sum);
   } else {
-    printf("%llu\n", prime_sum);
+    printf("%lu\n", prime_sum);
   }
 
   free(primes);
