@@ -1,0 +1,44 @@
+devbox$ perf stat -e task-clock,cycles,instructions,branch-instructions,branch-misses,cache-references,cache-misses,L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses ./mine/build/PrimeSum8Presieve13.exe 1099511627776 --sum-only
+22209544734075241069431
+
+ Performance counter stats for './mine/build/PrimeSum8Presieve13.exe 1099511627776 --sum-only':
+
+        791,723.99 msec task-clock                       #    1.000 CPUs utilized
+ 2,805,159,049,839      cycles                           #    3.543 GHz                         (30.00%)
+ 7,715,699,067,573      instructions                     #    2.75  insn per cycle              (30.00%)
+ 1,026,687,020,704      branch-instructions              #    1.297 G/sec                       (30.00%)
+    18,886,474,280      branch-misses                    #    1.84% of all branches             (30.00%)
+     2,962,599,735      cache-references                 #    3.742 M/sec                       (30.00%)
+         4,003,192      cache-misses                     #    0.14% of all cache refs           (30.00%)
+   903,025,307,958      L1-dcache-loads                  #    1.141 G/sec                       (30.00%)
+   448,686,116,161      L1-dcache-load-misses            #   49.69% of all L1-dcache accesses   (30.00%)
+        93,881,654      LLC-loads                        #  118.579 K/sec                       (30.00%)
+           723,860      LLC-load-misses                  #    0.77% of all LL-cache accesses    (30.00%)
+
+     791.768187396 seconds time elapsed
+
+     791.589824000 seconds user
+       0.131992000 seconds sys
+
+phantompc❯ perf stat -e task-clock,cycles,instructions,branch-instructions,branch-misses,cache-references,cache-misses,L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses ./mine/build/PrimeSum8Presieve13.exe 1099511627776 --sum-only
+
+22209544734075241069431
+
+ Performance counter stats for './mine/build/PrimeSum8Presieve13.exe 1099511627776 --sum-only':
+
+        588,221.57 msec task-clock:u
+ 2,509,485,163,978      cycles:u                                                                (62.49%)
+ 6,850,915,158,330      instructions:u                                                          (62.49%)
+ 1,025,852,576,280      branch-instructions:u                                                   (62.49%)
+    18,323,451,741      branch-misses:u                                                         (62.50%)
+   792,744,339,220      cache-references:u                                                      (62.51%)
+       754,251,667      cache-misses:u                                                          (62.51%)
+   967,388,737,644      L1-dcache-loads:u                                                       (62.51%)
+   549,970,347,261      L1-dcache-load-misses:u                                                 (62.49%)
+   <not supported>      LLC-loads:u
+   <not supported>      LLC-load-misses:u
+
+     588.385713978 seconds time elapsed
+
+     581.103416000 seconds user
+       0.012713000 seconds sys
