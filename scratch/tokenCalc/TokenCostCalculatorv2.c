@@ -155,6 +155,11 @@ static const ModelPricing MODEL_PRICING[] = {
                .input_cache_write = 6.25,
                .input_cache_read  = 0.50,
                .output            = 25.00}},
+    {.name  = "claude-sonnet-5",
+     .rates = {.input_no_cache    = 3.00,
+               .input_cache_write = 3.75,
+               .input_cache_read  = 0.30,
+               .output            = 15.00}},
     {.name  = "claude-4.6-sonnet",
      .rates = {.input_no_cache    = 3.00,
                .input_cache_write = 3.75,
@@ -195,7 +200,7 @@ static const char ERRORED_FIELD[32] = "Errored, No Charge";
 
 static const int FALLBACK_MODEL_INDEX = 26;
 
-#define MAX_MODELS 32
+#define MAX_MODELS 64
 
 static long parse_field_as_long(char *field) {
   return strtol(field, NULL, 10);

@@ -186,7 +186,7 @@ static const char ERRORED_FIELD[32] = "Errored, No Charge";
 
 static const int FALLBACK_MODEL_INDEX = 26;
 
-#define MAX_MODELS 32
+#define MAX_MODELS 64
 
 static long parse_field_as_long(char *field) {
   return strtol(field, NULL, 10);
