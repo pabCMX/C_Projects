@@ -31,6 +31,10 @@ static const WheelPrimes W_PRIMES[] = {
 static const uint32_t W_PRIME_COUNT =
     5; // Count of primes used from the wheel struct to make the pre-sieve pattern.
 
+// Split between small many-strike primes, and large low-strike primes. Actively Benchmarking.
+// 16384 test finish time = 185.917792s, 2^40 time =
+static const uint32_t WHEEL_MARKING_LIMIT = 16384;
+
 uint64_t isqrt(uint64_t n) {
   if (n == 0)
     return 0;
@@ -314,10 +318,13 @@ static void odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint32_t
   }
 
   uint32_t active_prime_count = count_active_primes_binary(primes, base_prime_count, high_num);
+  uint32_t wheel_end          = active_prime_count;
 
+  if (wheel_end > WHEEL_MARKING_LIMIT)
+    wheel_end = WHEEL_MARKING_LIMIT;
   // Then we iterate through every prime in primes[] that has a multiple within the segment. Except
   // for the wheel primes, handled by the pre-sieve.
-  for (uint64_t i = W_PRIME_COUNT + 1; i < active_prime_count; i++) {
+  for (uint64_t i = W_PRIME_COUNT + 1; i < wheel_end; i++) {
     uint64_t p = primes[i];
     // We need to compute the segment relative offset for the otherwise global index in next_cursor
     uint64_t cursor = next_cursor[i];
@@ -326,6 +333,14 @@ static void odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint32_t
     uint32_t phase = prime_phase[i];
 
     // Now while we are below the size of the segment, we stride by p and mark each multiple.
+    if (p >= segment_size) {
+      if (offset < segment_size) {
+        is_composite[offset >> 6] |= 1ULL << (offset & 63);
+        offset += p;
+      }
+      next_cursor[i] = offset + segment_base;
+      continue;
+    }
     while (offset < segment_size) {
       is_composite[offset >> 6] |= 1ULL << (offset & 63);
       // We use the phase to make sure we get to the right next wheel gap,
@@ -340,6 +355,27 @@ static void odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint32_t
     // And save our the prime's phase for next segment as well.
     prime_phase[i] = phase;
   }
+
+  // Medium prime loop for primes that don't strike more than a handful of times per segment.
+  for (uint64_t i = WHEEL_MARKING_LIMIT; i < active_prime_count; i++) {
+    uint64_t p         = primes[i];
+    uint64_t p_squared = p * p;
+    if (p <= W_PRIMES[W_PRIME_COUNT - 1].prime)
+      continue;
+    if (p_squared >= high_num)
+      break;
+    // We need to compute the segment relative offset for the otherwise global index in next_cursor
+    uint64_t cursor = next_cursor[i];
+    uint32_t offset = cursor - segment_base;
+    // Now while we are below the size of the segment, we stride by p and mark each multiple.
+    while (offset < segment_size) {
+      is_composite[offset >> 6] |= 1ULL << (offset & 63);
+      offset += p;
+    }
+    // When we're done, we save the next multiple, adding back segment_base to get the global index
+    next_cursor[i] = offset + segment_base;
+  }
+
   // Accumulate sum and prime count from the composite sieve.
   for (uint64_t i = 0; i < segment_nwords; i++) {
     uint64_t prime_word = ~is_composite[i]; // Invert the composite 'word' so primes are 1.
@@ -357,6 +393,56 @@ static void odds_seg_sieve(uint32_t *primes, uint64_t base_prime_count, uint32_t
   }
   *out_p_count += segment_count;
   *out_p_sum += segment_sum;
+}
+
+static int run_small_search(uint32_t *primes, uint64_t base_prime_count, uint64_t end,
+                            u128 *prime_sum, uint64_t *total_primes_counter) {
+  uint32_t  nwords       = (end + 64) / 64;
+  uint64_t *is_composite = calloc(nwords, sizeof(uint64_t));
+  if (is_composite == NULL) {
+    printf("Unable to allocate small sieve composites array. Exiting...\n");
+    return EXIT_FAILURE;
+  }
+  uint32_t end_bits  = end % 64;
+  uint64_t tail_mask = ~0ULL; // Starting with no tailmask
+  if (end_bits != 0 && end_bits != 63) {
+    tail_mask = (1ULL << (end_bits + 1)) -
+                1; // In case we get a ragged end, we need a mask to & off unused comps
+  } else if (end_bits == 0) {
+    tail_mask = 1ULL;
+  }
+  is_composite[0] = 7; // Setting 0, 1, and 2(preseeded) as composite (7 = 111 in binary)
+
+  for (uint32_t i = 0; i < base_prime_count; i++) {
+    uint32_t p         = primes[i];
+    uint64_t p_squared = p * p;
+
+    if (p_squared > end) {
+      // We've found the last prime that still strikes within the sieve.
+      break;
+    }
+    for (uint32_t j = p_squared; j <= end; j += p) {
+      is_composite[j >> 6] |= 1ULL << (j & 63);
+    }
+  }
+
+  // Accumulate sum and prime count from the composite sieve.
+  for (uint32_t i = 0; i < nwords; i++) {
+    uint64_t prime_word = ~is_composite[i]; // Invert the composite 'word' so primes are 1.
+    if (i + 1 == nwords)
+      prime_word &= tail_mask; // If we're at the end of the segment, AND the tailmask.
+    if (prime_word == 0ULL)
+      continue; // If the word is 0, no primes, skip.
+    while (prime_word != 0) {
+      unsigned bit = (unsigned)__builtin_ctzll(prime_word); // Get the index of the first prime
+      prime_word &= prime_word - 1;                         // Clear the last 1 for next check.
+      uint32_t number = i * 64 + bit;                       // We calculate the real number.
+      *prime_sum += (u128)number; // Finally sum the numeric value of that index.
+      (*total_primes_counter)++;
+    }
+  }
+  free(is_composite);
+  return EXIT_SUCCESS;
 }
 
 // Sets up and manages the main sieve loop.
@@ -409,17 +495,21 @@ static int run_full_search(uint32_t *primes, uint64_t base_prime_count, uint64_t
   return EXIT_SUCCESS;
 }
 
-// Segmented Odds-only E-sieve with rolling cursors. Searches for primes between 2 and given arg or
-// 2 and 2^31 with no arg. Hoping for ~50% better perf than non-odds only version on ends ~2^31.
+// Segmented Odds-only E-sieve with rolling cursors. Searches for primes between 2 and given arg
+// or 2 and 2^31 with no arg. Hoped for ~50% better perf than non-odds only version on ends ~2^31.
+// results disappointing: worse than v9 by about 10%, probably due to extra branching in the mark
+// loop. No other place to put the split logic as far as I can see, so I'm leaving it as a failed
+// experiment. Went better to split on endpoint size and keep a completely different loop with
+// less setup for small endpoint wins vs the extra setup for large endpoint wins.
 int main(int argc, char *argv[]) {
   const char *endpoint_arg         = NULL;
   _Bool       sum_only             = false;
   uint64_t    end                  = 1;
-  u128        prime_sum            = 2;                  // Adding 2 to start.
-  uint64_t    total_primes_counter = 1;                  // Counting 2
-  uint64_t    base_prime_count     = 0;                  // Primes in sqrt(end) base sieve array.
-  uint32_t    wheel_period         = 15015;              // 3 * 5 * 7 * 11 * *13
-  uint32_t    block_size           = wheel_period * 128; // Segment size (~240KiB of bits).
+  u128        prime_sum            = 2;                 // Adding 2 to start.
+  uint64_t    total_primes_counter = 1;                 // Counting 2
+  uint64_t    base_prime_count     = 0;                 // Primes in sqrt(end) base sieve array.
+  uint32_t    wheel_period         = 15015;             // 3 * 5 * 7 * 11 * *13
+  uint32_t    block_size           = wheel_period * 64; // Segment size (~120KiB of bits).
   uint64_t    nwords               = (block_size + 63) / 64;
 
   if (argc > 3) {
@@ -471,6 +561,31 @@ int main(int argc, char *argv[]) {
     printf("Starting pre-sieve pattern build...\n");
   }
 
+  // If the endpoint is less than 2^19s, we just use a plain bitsieve and give the sum early,
+  // skipping everything else.
+  if (end <= 1ull << 19) {
+    uint32_t success =
+        run_small_search(base_primes, base_prime_count, end, &prime_sum, &total_primes_counter);
+    if (success != EXIT_SUCCESS)
+      return EXIT_FAILURE;
+    if (!sum_only && isatty(STDERR_FILENO)) {
+      fprintf(stderr, "\rPrime count: %-10lu Completion %%: %3.2f \n", total_primes_counter,
+              100.00f);
+      fflush(stderr);
+    }
+
+    if (!sum_only) {
+      printf("Found %lu primes [0, %lu]\n", total_primes_counter, end);
+      fputs("Sum of found primes is ", stdout);
+      print_u128(stdout, prime_sum);
+      putchar('\n');
+    } else {
+      print_u128(stdout, prime_sum);
+      putchar('\n');
+    }
+    free(base_primes);
+    return EXIT_SUCCESS;
+  }
   uint64_t *pre_sieve = build_pre_sieve(nwords);
   if (pre_sieve == NULL) {
     printf("Error in pre-sieve pattern build.\n");
