@@ -537,11 +537,12 @@ def command_capture_sums(args: argparse.Namespace) -> int:
 def discover_executables() -> list[Path]:
     results: list[Path] = []
     for subdir_name in ["mine", "ai"]:
-        subdir = PRIME_DIR / subdir_name
-        if not subdir.exists():
+        build_dir = PRIME_DIR / subdir_name / "build"
+        if not build_dir.exists():
             continue
-        for source in sorted(subdir.glob("*.c")):
-            results.append(subdir / "build" / f"{source.stem}.exe")
+        for executable in sorted(build_dir.glob("*.exe")):
+            if executable.is_file() and os.access(executable, os.X_OK):
+                results.append(executable)
     return results
 
 
@@ -676,7 +677,9 @@ def build_parser() -> argparse.ArgumentParser:
     capture_sums_parser.add_argument("--per-run-timeout", type=parse_positive_float, default=None)
     capture_sums_parser.set_defaults(func=command_capture_sums)
 
-    capture_all_parser = subparsers.add_parser("capture-all", help="benchmark all discovered programs")
+    capture_all_parser = subparsers.add_parser(
+        "capture-all", help="benchmark executable programs already present in mine/build and ai/build"
+    )
     capture_all_parser.add_argument("--max-exp", type=parse_nonnegative_int, default=40)
     capture_all_parser.add_argument("--endpoint-suite", choices=["standard", "bench"], default="bench")
     capture_all_parser.add_argument("--expected", default=str(DEFAULT_EXPECTED))
