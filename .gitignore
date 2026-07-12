@@ -1,3 +1,5 @@
 /*/*.exe
 *.exe
 **/build/
+perf.data*
+__pycache__/
