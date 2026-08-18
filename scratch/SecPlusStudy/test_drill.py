@@ -11,11 +11,12 @@ import drill
 class MatchTests(unittest.TestCase):
     def test_explicit_aliases_match_after_normalization(self):
         self.assertTrue(drill.matches("TCP/UDP", ["tcp and udp"]))
-        self.assertTrue(drill.matches("161 udp", ["161"]))
+        self.assertTrue(drill.matches("161 udp", ["161", "161 udp"]))
 
     def test_substrings_are_not_implicitly_accepted(self):
         self.assertFalse(drill.matches("not actually detective", ["detective"]))
         self.assertFalse(drill.matches("secure shell extra", ["secure shell"]))
+        self.assertFalse(drill.matches("22 udp", ["22", "22 tcp"]))
 
 
 class BankTests(unittest.TestCase):
@@ -30,6 +31,10 @@ class BankTests(unittest.TestCase):
         )
         self.assertEqual(ftp_forward["item_id"], ftp_reverse["item_id"])
         self.assertTrue(drill.matches("FTP", ftp_reverse["answers"]))
+        ssh_reverse = next(
+            q for q in questions if q["prompt"] == "Port 22 — name one associated protocol?"
+        )
+        self.assertTrue(drill.matches("SCP", ssh_reverse["answers"]))
 
     def test_non_core_ports_are_not_expanded(self):
         _, questions = drill.load_questions("ports.json")
@@ -77,6 +82,36 @@ class BankTests(unittest.TestCase):
         )
         self.assertTrue(any("missing answers" in error for error in errors))
         self.assertTrue(any("missing explanation" in error for error in errors))
+
+    def test_validation_rejects_duplicate_prompts(self):
+        question = {
+            "prompt": "Same?",
+            "answers": ["yes"],
+            "reveal": "yes",
+            "explanation": "Reason",
+        }
+        errors = drill.validate_bank(
+            "bad.json",
+            {
+                "title": "Bad",
+                "questions": [
+                    {"id": "one", **question},
+                    {"id": "two", **question},
+                ],
+            },
+        )
+        self.assertTrue(any("duplicate prompt" in error for error in errors))
+
+    def test_validation_reports_non_object_records(self):
+        errors = drill.validate_bank(
+            "bad.json", {"title": "Bad", "questions": [None]}
+        )
+        self.assertTrue(any("expected an object" in error for error in errors))
+        port_errors = drill.validate_bank(
+            "bad-ports.json",
+            {"title": "Bad ports", "kind": "ports", "items": [None]},
+        )
+        self.assertTrue(any("expected an object" in error for error in port_errors))
 
 
 class StatsAndWeightingTests(unittest.TestCase):

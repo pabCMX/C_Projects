@@ -24,7 +24,7 @@
       "id": "ssh",
       "name": "SSH",
       "full_name": "Secure Shell",
-      "aliases": ["secure shell"],
+      "aliases": ["secure shell", "scp"],
       "port": "22",
       "transport": "tcp",
       "use": "Encrypted remote administration; SFTP and SCP can run over SSH."

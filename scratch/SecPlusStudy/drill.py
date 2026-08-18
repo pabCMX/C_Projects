@@ -54,16 +54,12 @@ def normalize(text: str) -> str:
 
 
 def matches(user: str, answers: list[str]) -> bool:
-    """Match only explicit aliases, plus an optional transport after a port."""
+    """Match only explicit aliases after punctuation/case normalization."""
     got = normalize(user)
     if not got:
         return False
     accepted = {normalize(a) for a in answers if a}
     if got in accepted:
-        return True
-    # Allow "161 udp" when the expected answer is "161".
-    first = got.split(" ", 1)[0]
-    if first in accepted and first.isdigit():
         return True
     return False
 
@@ -119,10 +115,21 @@ def expand_ports(bank: dict) -> list[dict]:
 
         port_s = str(port)
         t_label = "TCP/UDP" if transport == "both" else str(transport).upper()
+        if transport == "both":
+            port_answers = [
+                port_s,
+                f"{port_s} tcp",
+                f"{port_s} udp",
+                f"{port_s} both",
+                f"{port_s} tcp/udp",
+            ]
+        else:
+            port_answers = [port_s, f"{port_s} {transport}"]
+        port_answers.extend(item.get("port_answers", []))
         questions.append(
             {
                 "prompt": f"{name} port?",
-                "answers": [port_s, *item.get("port_answers", [])],
+                "answers": port_answers,
                 "reveal": f"{port_s} {t_label}",
                 "extra": extra,
                 "item_id": item_id,
@@ -281,6 +288,10 @@ def weak_item_count(stats: dict, questions: list[dict]) -> int:
     )
 
 
+def item_weakness(stats: dict, item_id: str) -> int:
+    return stats.get("items", {}).get(item_id, {}).get("weakness", 0)
+
+
 def avg_text(hits: int, n: int) -> str:
     if n == 0:
         return "---"
@@ -339,9 +350,7 @@ def choose_item(
     candidates = [item_id for item_id in item_ids if item_id not in recent_items[-2:]]
     if not candidates:
         candidates = item_ids
-    weights = [
-        1 + 2 * item_stats(stats, item_id)["weakness"] for item_id in candidates
-    ]
+    weights = [1 + 2 * item_weakness(stats, item_id) for item_id in candidates]
     return rng.choices(candidates, weights=weights, k=1)[0]
 
 
@@ -410,7 +419,7 @@ def drill(title: str, questions: list[dict], stats: dict, key: str) -> None:
             reason = "missed recently"
         else:
             selected_item = choose_item(groups, stats, recent_items)
-            weakness = item_stats(stats, selected_item)["weakness"]
+            weakness = item_weakness(stats, selected_item)
             reason = "weak item" if weakness else "normal mix"
 
         q = choose_variant(groups[selected_item], variant_counts)
@@ -505,8 +514,11 @@ def validate_bank(filename: str, bank: dict) -> list[str]:
         "directive",
     }
     for index, record in enumerate(records):
-        record_id = record.get("id")
         label = f"{filename}[{index}]"
+        if not isinstance(record, dict):
+            errors.append(f"{label}: expected an object")
+            continue
+        record_id = record.get("id")
         if not record_id:
             errors.append(f"{label}: missing stable id")
         elif record_id in seen_ids:
@@ -546,16 +558,21 @@ def validate_bank(filename: str, bank: dict) -> list[str]:
             expanded = expand_controls(bank)
         else:
             expanded = prepare_questions(filename, records)
-    except (KeyError, TypeError, ValueError) as exc:
+    except (AttributeError, KeyError, TypeError, ValueError) as exc:
         errors.append(f"{filename}: cannot expand bank: {exc}")
         return errors
 
     seen_variants: set[str] = set()
+    seen_prompts: set[str] = set()
     for question in expanded:
         variant_id = question["variant_id"]
         if variant_id in seen_variants:
             errors.append(f"{filename}: duplicate question variant {variant_id!r}")
         seen_variants.add(variant_id)
+        prompt = question.get("prompt")
+        if prompt in seen_prompts:
+            errors.append(f"{filename}: duplicate prompt {prompt!r}")
+        seen_prompts.add(prompt)
         if not question.get("answers"):
             errors.append(f"{filename}: {variant_id!r} has no answers")
     return errors
