@@ -2,98 +2,109 @@
   "title": "Zero Trust",
   "questions": [
     {
+      "id": "policy-engine",
       "prompt": "Which Zero Trust component decides whether to grant access?",
-      "answers": ["policy engine", "pe", "pdp", "policy decision point"],
-      "reveal": "policy engine (PE / PDP)"
+      "answers": ["policy engine", "pe"],
+      "reveal": "policy engine (PE)",
+      "explanation": "The policy engine evaluates policy and trust inputs to make the access decision."
     },
     {
-      "prompt": "Which Zero Trust component enforces the decision?",
-      "answers": ["pep", "policy enforcement point"],
-      "reveal": "PEP (policy enforcement point)"
-    },
-    {
-      "prompt": "Which Zero Trust component writes/sends policy to the enforcer?",
+      "id": "policy-administrator",
+      "prompt": "Which component establishes or shuts down the connection after the decision?",
       "answers": ["policy administrator", "pa"],
-      "reveal": "policy administrator (PA)"
+      "reveal": "policy administrator (PA)",
+      "explanation": "The policy administrator executes the policy engine’s decision and communicates with the enforcement point."
     },
     {
-      "prompt": "Which plane moves user traffic after the decision?",
-      "answers": ["data plane", "data"],
-      "reveal": "data plane"
+      "id": "policy-enforcement",
+      "prompt": "Which component enables, monitors, and terminates the subject’s connection?",
+      "answers": ["policy enforcement point", "pep"],
+      "reveal": "policy enforcement point (PEP)",
+      "explanation": "The PEP is the gate through which the subject reaches the resource."
     },
     {
-      "prompt": "Which plane do the policy engine and policy administrator live on?",
+      "id": "control-plane",
+      "prompt": "Which plane contains the policy engine and policy administrator?",
       "answers": ["control plane", "control"],
-      "reveal": "control plane"
+      "reveal": "control plane",
+      "explanation": "The control plane evaluates and administers access decisions."
     },
     {
+      "id": "data-plane",
+      "prompt": "Which plane carries permitted user traffic to a resource?",
+      "answers": ["data plane", "data"],
+      "reveal": "data plane",
+      "explanation": "The data plane carries traffic only after the control plane authorizes the connection."
+    },
+    {
+      "id": "implicit-deny",
       "prompt": "Zero Trust default access stance?",
-      "answers": ["deny", "implicit deny", "never trust", "deny by default"],
-      "reveal": "implicit deny / never trust"
+      "answers": ["implicit deny", "deny by default", "default deny", "deny"],
+      "reveal": "implicit deny",
+      "explanation": "Access is denied unless policy explicitly authorizes it."
     },
     {
+      "id": "assume-breach",
       "prompt": "Zero Trust core assumption about the environment?",
-      "answers": ["assume breach", "breach", "already compromised"],
-      "reveal": "assume breach"
+      "answers": ["assume breach", "already compromised"],
+      "reveal": "assume breach",
+      "explanation": "Design as though an attacker may already be present, then limit movement and continuously inspect activity."
     },
     {
+      "id": "always-verify",
       "prompt": "Never trust, always _____?",
       "answers": ["verify", "always verify"],
-      "reveal": "verify"
+      "reveal": "verify",
+      "explanation": "Network location alone never grants permanent trust."
     },
     {
-      "prompt": "Who terminates the session if policy says no?",
-      "answers": ["pep", "policy enforcement point"],
-      "reveal": "PEP"
+      "id": "continuous-verification",
+      "prompt": "Reevaluate trust throughout a session instead of only at login — principle?",
+      "answers": ["continuous verification", "continuously verify", "continuous validation"],
+      "reveal": "continuous verification",
+      "explanation": "Zero Trust repeatedly reevaluates identity, device, resource, and environmental signals."
     },
     {
-      "prompt": "Who issues session commands/credentials to the PEP?",
-      "answers": ["policy administrator", "pa"],
-      "reveal": "policy administrator (PA)"
+      "id": "device-posture",
+      "prompt": "Patch level, encryption status, and endpoint health are examples of what trust input?",
+      "answers": ["device posture", "device trust", "device health"],
+      "reveal": "device posture",
+      "explanation": "The policy engine can use device condition as a dynamic signal when deciding access."
     },
     {
-      "prompt": "Subject + resource + environment are inputs to which component?",
-      "answers": ["policy engine", "pe", "pdp", "policy decision point"],
-      "reveal": "policy engine"
+      "id": "adaptive-identity",
+      "prompt": "Identity confidence that changes with risk and context — name?",
+      "answers": ["adaptive identity", "adaptive authentication", "adaptive"],
+      "reveal": "adaptive identity",
+      "explanation": "Authentication requirements can increase when location, behavior, or device risk changes."
     },
     {
-      "prompt": "Access based on policy, not network location — name?",
+      "id": "least-privilege",
+      "prompt": "Grant only the minimum access needed for the current task — principle?",
+      "answers": ["least privilege", "minimum privilege"],
+      "reveal": "least privilege",
+      "explanation": "Narrow permissions reduce what a compromised subject can reach."
+    },
+    {
+      "id": "microsegmentation",
+      "prompt": "Isolate workloads into small policy-controlled zones — technique?",
+      "answers": ["microsegmentation", "micro-segmentation"],
+      "reveal": "microsegmentation",
+      "explanation": "Small trust zones limit lateral movement and reduce the blast radius of a breach."
+    },
+    {
+      "id": "policy-driven",
+      "prompt": "Access is based on identity and context rather than network location — model?",
       "answers": ["policy-driven access control", "policy driven access control", "policy-driven"],
-      "reveal": "policy-driven access control"
+      "reveal": "policy-driven access control",
+      "explanation": "Explicit policy replaces the assumption that an internal network location is trustworthy."
     },
     {
-      "prompt": "Identity that changes with risk/context — name?",
-      "answers": ["adaptive identity", "adaptive"],
-      "reveal": "adaptive identity"
-    },
-    {
-      "prompt": "Limit blast radius by isolating workloads — two acceptable names?",
-      "answers": [
-        "microsegmentation",
-        "threat scope reduction",
-        "micro-segmentation"
-      ],
-      "reveal": "microsegmentation / threat scope reduction"
-    },
-    {
-      "prompt": "Does the data plane move traffic before or after the access decision?",
-      "answers": ["after", "after the decision"],
-      "reveal": "after the decision"
-    },
-    {
-      "prompt": "Control plane vs data plane: which one carries packets for the user?",
-      "answers": ["data plane", "data"],
-      "reveal": "data plane"
-    },
-    {
-      "prompt": "PE decides, PA writes, PEP _____?",
-      "answers": ["enforces", "enforce"],
-      "reveal": "enforces"
-    },
-    {
-      "prompt": "Trust is never granted just because a host is 'inside' the LAN. True or false?",
-      "answers": ["true"],
-      "reveal": "true"
+      "id": "resource-protection",
+      "prompt": "In Zero Trust, what is protected directly instead of trusting an entire network segment?",
+      "answers": ["resource", "resources", "individual resource", "assets"],
+      "reveal": "individual resources",
+      "explanation": "Zero Trust protects each resource with explicit access decisions rather than granting broad network trust."
     }
   ]
 }
