@@ -1,0 +1,72 @@
+{
+  "window": 20,
+  "banks": {
+    "ports.json": {
+      "hits": 164,
+      "at_bats": 323,
+      "recent": [
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "controls.json": {
+      "hits": 47,
+      "at_bats": 67,
+      "recent": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0
+      ]
+    },
+    "vectors.json": {
+      "hits": 0,
+      "at_bats": 0,
+      "recent": []
+    },
+    "zero_trust.json": {
+      "hits": 0,
+      "at_bats": 0,
+      "recent": []
+    },
+    "all": {
+      "hits": 0,
+      "at_bats": 0,
+      "recent": []
+    }
+  }
+}

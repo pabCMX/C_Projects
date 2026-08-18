@@ -1,0 +1,115 @@
+{
+  "title": "Threat vectors",
+  "questions": [
+    {
+      "prompt": "USB drop — vector?",
+      "answers": ["removable device", "removable media", "removable devices"],
+      "reveal": "removable device"
+    },
+    {
+      "prompt": "PNG / malicious image — vector?",
+      "answers": ["image-based", "image based", "image"],
+      "reveal": "image-based"
+    },
+    {
+      "prompt": "Word doc / PDF / .exe — vector?",
+      "answers": ["file-based", "file based", "file"],
+      "reveal": "file-based"
+    },
+    {
+      "prompt": "Windows XP with no vendor support — vector?",
+      "answers": ["unsupported system", "unsupported systems", "unsupported os", "unsupported application"],
+      "reveal": "unsupported system"
+    },
+    {
+      "prompt": "Phishing email — vector?",
+      "answers": ["message-based", "email", "message based"],
+      "reveal": "message-based (email)"
+    },
+    {
+      "prompt": "Smishing / SMS lure — vector?",
+      "answers": ["message-based", "sms", "message based"],
+      "reveal": "message-based (SMS)"
+    },
+    {
+      "prompt": "Malicious Slack/IM link — vector?",
+      "answers": ["message-based", "im", "instant message", "message based"],
+      "reveal": "message-based (IM)"
+    },
+    {
+      "prompt": "Vishing / fake helpdesk call — vector?",
+      "answers": ["voice call", "voice", "vishing"],
+      "reveal": "voice call"
+    },
+    {
+      "prompt": "Evil twin / open cafe Wi-Fi — vector?",
+      "answers": ["unsecure network", "wireless", "unsecure wireless", "insecure network"],
+      "reveal": "unsecure network (wireless)"
+    },
+    {
+      "prompt": "Bluetooth pairing attack — vector?",
+      "answers": ["unsecure network", "bluetooth", "insecure network"],
+      "reveal": "unsecure network (Bluetooth)"
+    },
+    {
+      "prompt": "Telnet left open on a router — vector?",
+      "answers": ["open service ports", "open port", "open service port"],
+      "reveal": "open service ports"
+    },
+    {
+      "prompt": "admin/admin still enabled — vector?",
+      "answers": ["default credentials", "default password", "default accounts"],
+      "reveal": "default credentials"
+    },
+    {
+      "prompt": "Compromised software vendor — vector?",
+      "answers": ["supply chain", "vendor", "supplier"],
+      "reveal": "supply chain"
+    },
+    {
+      "prompt": "MSP / managed service provider breach — vector?",
+      "answers": ["supply chain", "msp", "managed service provider"],
+      "reveal": "supply chain (MSP)"
+    },
+    {
+      "prompt": "Typosquatting paypa1.com — vector family?",
+      "answers": ["human", "social engineering", "typosquatting"],
+      "reveal": "human (typosquatting)"
+    },
+    {
+      "prompt": "Business email compromise — vector family?",
+      "answers": ["human", "social engineering", "bec"],
+      "reveal": "human (BEC)"
+    },
+    {
+      "prompt": "Watering hole — vector family?",
+      "answers": ["human", "social engineering", "watering hole"],
+      "reveal": "human (watering hole)"
+    },
+    {
+      "prompt": "Brand impersonation / fake login page — vector family?",
+      "answers": ["human", "social engineering", "brand impersonation"],
+      "reveal": "human (brand impersonation)"
+    },
+    {
+      "prompt": "Pretexting — vector family?",
+      "answers": ["human", "social engineering"],
+      "reveal": "human (pretexting)"
+    },
+    {
+      "prompt": "QR code with a malicious payload — closest vector?",
+      "answers": ["image-based", "image based", "image"],
+      "reveal": "image-based"
+    },
+    {
+      "prompt": "Macro-enabled .xlsm emailed to finance — two vectors?",
+      "answers": ["message-based file-based", "file-based message-based", "email file"],
+      "reveal": "message-based + file-based"
+    },
+    {
+      "prompt": "End-of-life NAS still on the LAN — vector?",
+      "answers": ["unsupported system", "unsupported systems", "unsupported application"],
+      "reveal": "unsupported system"
+    }
+  ]
+}

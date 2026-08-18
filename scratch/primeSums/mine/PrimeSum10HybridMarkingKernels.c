@@ -32,8 +32,13 @@ static const uint32_t W_PRIME_COUNT =
     5; // Count of primes used from the wheel struct to make the pre-sieve pattern.
 
 // Split between small many-strike primes, and large low-strike primes. Actively Benchmarking.
-// 16384 test finish time = 185.917792s, 2^40 time =
-static const uint32_t WHEEL_MARKING_LIMIT = 16384;
+// 16384 test finish time = 185.917792s,
+// 16384  2^40 time = 699.283494
+// 8192   2^40 time = 681.176305
+// 4096   2^40 time = 679.938375 *best*
+// 2048   2^40 time = 685.316097
+// v9     2^40 time = 618.380570
+static const uint32_t WHEEL_MARKING_LIMIT = 4096;
 
 uint64_t isqrt(uint64_t n) {
   if (n == 0)

@@ -1,0 +1,425 @@
+{
+  "title": "Control category vs type",
+  "questions": [
+    {
+      "prompt": "SIEM — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "SIEM — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Log review — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Log review — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Firewall — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "Firewall — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "IDS — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "IDS — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "IPS — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "IPS — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Encryption — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "Encryption — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "MFA — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "MFA — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "ACL — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "ACL — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "DLP — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "DLP — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "FIM — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "FIM — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Antivirus — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "Antivirus — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Honeypot — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "Honeypot — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Warning banner — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "Warning banner — type?",
+      "answers": ["deterrent"],
+      "reveal": "deterrent"
+    },
+    {
+      "prompt": "Least privilege — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Security awareness training — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Security awareness training — type?",
+      "answers": ["preventive", "directive"],
+      "reveal": "preventive (directive also counts)"
+    },
+    {
+      "prompt": "Patch management — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Patch management — type?",
+      "answers": ["corrective", "preventive"],
+      "reveal": "corrective (preventive also counts)"
+    },
+    {
+      "prompt": "Backup restoration — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Backup restoration — type?",
+      "answers": ["corrective"],
+      "reveal": "corrective"
+    },
+    {
+      "prompt": "Incident response — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Incident response — type?",
+      "answers": ["corrective"],
+      "reveal": "corrective"
+    },
+    {
+      "prompt": "Job rotation — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Job rotation — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Mandatory vacation — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Mandatory vacation — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Separation of duties — category?",
+      "answers": ["managerial", "operational", "administrative"],
+      "reveal": "managerial"
+    },
+    {
+      "prompt": "Separation of duties — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Background checks — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Background checks — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Penetration test — category?",
+      "answers": ["operational"],
+      "reveal": "operational"
+    },
+    {
+      "prompt": "Penetration test — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Vulnerability scan — category?",
+      "answers": ["technical"],
+      "reveal": "technical"
+    },
+    {
+      "prompt": "Vulnerability scan — type?",
+      "answers": ["detective"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "AUP / security policy — category?",
+      "answers": ["managerial", "administrative"],
+      "reveal": "managerial"
+    },
+    {
+      "prompt": "AUP / security policy — type?",
+      "answers": ["directive"],
+      "reveal": "directive"
+    },
+    {
+      "prompt": "Risk assessment — category?",
+      "answers": ["managerial", "administrative"],
+      "reveal": "managerial"
+    },
+    {
+      "prompt": "NDA — category?",
+      "answers": ["managerial", "administrative"],
+      "reveal": "managerial"
+    },
+    {
+      "prompt": "NDA — type?",
+      "answers": ["directive", "preventive"],
+      "reveal": "directive"
+    },
+    {
+      "prompt": "Change management — category?",
+      "answers": ["managerial", "operational", "administrative"],
+      "reveal": "managerial"
+    },
+    {
+      "prompt": "CCTV / cameras — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "CCTV / cameras — type?",
+      "answers": ["detective", "deterrent"],
+      "reveal": "detective (deterrent also counts)"
+    },
+    {
+      "prompt": "Guards — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Guards — type?",
+      "answers": ["detective", "preventive"],
+      "reveal": "detective"
+    },
+    {
+      "prompt": "Locks — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Locks — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Mantrap / vestibule — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Mantrap / vestibule — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Bollards — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Bollards — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Fence — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Fence — type?",
+      "answers": ["deterrent", "preventive"],
+      "reveal": "deterrent (preventive also counts)"
+    },
+    {
+      "prompt": "Lighting — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Lighting — type?",
+      "answers": ["deterrent"],
+      "reveal": "deterrent"
+    },
+    {
+      "prompt": "Signage — category?",
+      "answers": ["physical", "managerial"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Signage — type?",
+      "answers": ["deterrent", "directive"],
+      "reveal": "deterrent (directive also counts)"
+    },
+    {
+      "prompt": "Fire suppression — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Fire suppression — type?",
+      "answers": ["corrective"],
+      "reveal": "corrective"
+    },
+    {
+      "prompt": "Faraday cage — category?",
+      "answers": ["physical"],
+      "reveal": "physical"
+    },
+    {
+      "prompt": "Faraday cage — type?",
+      "answers": ["preventive"],
+      "reveal": "preventive"
+    },
+    {
+      "prompt": "Hot site when the primary control is impossible — type?",
+      "answers": ["compensating"],
+      "reveal": "compensating"
+    },
+    {
+      "prompt": "technical — category or type?",
+      "answers": ["category"],
+      "reveal": "category"
+    },
+    {
+      "prompt": "managerial — category or type?",
+      "answers": ["category"],
+      "reveal": "category"
+    },
+    {
+      "prompt": "operational — category or type?",
+      "answers": ["category"],
+      "reveal": "category"
+    },
+    {
+      "prompt": "physical — category or type?",
+      "answers": ["category"],
+      "reveal": "category"
+    },
+    {
+      "prompt": "preventive — category or type?",
+      "answers": ["type"],
+      "reveal": "type"
+    },
+    {
+      "prompt": "detective — category or type?",
+      "answers": ["type"],
+      "reveal": "type"
+    },
+    {
+      "prompt": "corrective — category or type?",
+      "answers": ["type"],
+      "reveal": "type"
+    },
+    {
+      "prompt": "deterrent — category or type?",
+      "answers": ["type"],
+      "reveal": "type"
+    },
+    {
+      "prompt": "compensating — category or type?",
+      "answers": ["type"],
+      "reveal": "type"
+    },
+    {
+      "prompt": "directive — category or type?",
+      "answers": ["type"],
+      "reveal": "type"
+    }
+  ]
+}

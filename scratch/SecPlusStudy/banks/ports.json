@@ -1,0 +1,339 @@
+{
+  "title": "Ports and protocols",
+  "kind": "ports",
+  "items": [
+    {
+      "name": "FTP data",
+      "full_name": "File Transfer Protocol",
+      "port": "20",
+      "transport": "tcp",
+      "name_answers": ["ftp-data", "ftp data channel"],
+      "use": "Transfers the actual files. Port 21 is control; port 20 is data.",
+      "use_answers": ["transfer files", "file transfer", "data channel", "data port"]
+    },
+    {
+      "name": "FTP control",
+      "full_name": "File Transfer Protocol",
+      "port": "21",
+      "transport": "tcp",
+      "name_answers": ["ftp", "ftp command"],
+      "use": "Control port for FTP. Port 21 is commands; port 20 transfers files.",
+      "use_answers": ["control", "commands", "control port"]
+    },
+    {
+      "name": "SSH",
+      "full_name": "Secure Shell",
+      "port": "22",
+      "transport": "tcp",
+      "name_answers": ["sftp", "scp"],
+      "use": "Designed to transmit data through a remote connection.",
+      "use_answers": ["remote connection", "remote access", "remote"]
+    },
+    {
+      "name": "SFTP",
+      "full_name": "SSH File Transfer Protocol",
+      "port": "22",
+      "transport": "tcp",
+      "name_answers": ["ssh"],
+      "full_name_answers": ["secure file transfer protocol"],
+      "use": "Separate from FTP. Uses SSH to encrypt file transfers. Not FTP-server compatible.",
+      "use_answers": ["encrypt file transfers", "file transfer over ssh", "secure file transfer", "ssh file transfer"]
+    },
+    {
+      "name": "SMTP",
+      "full_name": "Simple Mail Transfer Protocol",
+      "port": "25",
+      "transport": "tcp",
+      "name_answers": ["smtp relay"],
+      "use": "Sends outgoing mail from email clients to mail servers.",
+      "use_answers": ["outgoing mail", "send mail", "send email"]
+    },
+    {
+      "name": "TACACS+",
+      "full_name": "Terminal Access Controller Access-Control System Plus",
+      "port": "49",
+      "transport": "tcp",
+      "name_answers": ["tacacs"],
+      "full_name_answers": [
+        "terminal access controller access control system plus",
+        "terminal access controller access-control system plus"
+      ],
+      "use": "Cisco proprietary protocol for authentication, authorization, and accounting (AAA).",
+      "use_answers": ["aaa", "cisco aaa", "authentication authorization accounting"]
+    },
+    {
+      "name": "DNS",
+      "full_name": "Domain Name System",
+      "port": "53",
+      "transport": "udp",
+      "transport_answers": ["both", "tcp/udp", "udp/tcp", "tcp and udp"],
+      "use": "Associates IP addresses with domain names.",
+      "use_answers": ["domain names", "name resolution", "ip to name", "resolve names"]
+    },
+    {
+      "name": "DHCP server",
+      "full_name": "Dynamic Host Configuration Protocol",
+      "port": "67",
+      "transport": "udp",
+      "name_answers": ["dhcp", "bootps"],
+      "use": "Assigns IP addresses and host config (mask, gateway, DNS). Server listens on 67.",
+      "use_answers": ["assign ip", "assign addresses", "ip addresses", "host configuration"]
+    },
+    {
+      "name": "DHCP client",
+      "full_name": "Dynamic Host Configuration Protocol",
+      "port": "68",
+      "transport": "udp",
+      "name_answers": ["bootpc"],
+      "use": "Client side of DHCP. Clients use port 68; servers use 67.",
+      "use_answers": ["dhcp client", "client", "assign ip"]
+    },
+    {
+      "name": "HTTP",
+      "full_name": "Hypertext Transfer Protocol",
+      "port": "80",
+      "transport": "tcp",
+      "use": "Websites and most internet traffic.",
+      "use_answers": ["websites", "web", "internet traffic"]
+    },
+    {
+      "name": "Kerberos",
+      "port": "88",
+      "transport": "both",
+      "use": "Network authentication over a non-secure network. Primarily UDP, can use TCP.",
+      "use_answers": ["authentication", "network authentication", "tickets"]
+    },
+    {
+      "name": "POP3",
+      "full_name": "Post Office Protocol",
+      "port": "110",
+      "transport": "tcp",
+      "name_answers": ["pop"],
+      "use": "Email clients download mail from servers. One-way communication, unlike IMAP.",
+      "use_answers": ["email", "download mail", "one-way", "one way"]
+    },
+    {
+      "name": "NTP",
+      "full_name": "Network Time Protocol",
+      "port": "123",
+      "transport": "udp",
+      "use": "Low-latency protocol that synchronizes timekeeping across a network.",
+      "use_answers": ["time", "synchronize time", "time sync", "clock"]
+    },
+    {
+      "name": "SMB session",
+      "full_name": "Server Message Block",
+      "port": "139",
+      "transport": "tcp",
+      "name_answers": ["smb 139", "smb netbios", "nbt", "netbios session"],
+      "use": "Legacy SMB over NetBIOS session, TCP 139. Used when 445 does not complete the handshake.",
+      "use_answers": ["legacy smb", "smb over netbios", "fallback"]
+    },
+    {
+      "name": "IMAP",
+      "full_name": "Internet Message Access Protocol",
+      "port": "143",
+      "transport": "tcp",
+      "name_answers": ["imap4"],
+      "use": "Email clients talk to mail servers. Two-way, unlike one-way POP.",
+      "use_answers": ["email", "two-way", "two way", "mail"]
+    },
+    {
+      "name": "SNMP query",
+      "full_name": "Simple Network Management Protocol",
+      "port": "161",
+      "transport": "udp",
+      "name_answers": ["snmp", "snmp agent"],
+      "use": "Monitor and manage network devices. Queries/gets use 161; traps use 162.",
+      "use_answers": ["monitor", "manage devices", "network management"]
+    },
+    {
+      "name": "SNMP trap",
+      "full_name": "Simple Network Management Protocol",
+      "port": "162",
+      "transport": "udp",
+      "name_answers": ["snmptrap"],
+      "use": "Device alerts/notifications (traps) sent to a manager on 162.",
+      "use_answers": ["traps", "alerts", "notifications"]
+    },
+    {
+      "name": "LDAP",
+      "full_name": "Lightweight Directory Access Protocol",
+      "port": "389",
+      "transport": "udp",
+      "use": "Manage and communicate with directories (users, groups, objects).",
+      "use_answers": ["directories", "directory", "directory services"]
+    },
+    {
+      "name": "HTTPS",
+      "full_name": "Hypertext Transfer Protocol Secure",
+      "port": "443",
+      "transport": "tcp",
+      "name_answers": ["http over tls"],
+      "use": "HTTP over TLS. Most websites use HTTPS instead of HTTP.",
+      "use_answers": ["secure web", "http over tls", "encrypted web", "websites"]
+    },
+    {
+      "name": "SSTP",
+      "full_name": "Secure Socket Tunneling Protocol",
+      "port": "443",
+      "transport": "tcp",
+      "use": "Microsoft VPN that replaced PPTP and L2TP/IPsec. Uses TLS over 443.",
+      "use_answers": ["vpn", "microsoft vpn", "tls vpn"]
+    },
+    {
+      "name": "SMB",
+      "full_name": "Server Message Block",
+      "port": "445",
+      "transport": "tcp",
+      "name_answers": ["cifs", "smb 445", "smb direct", "smb raw"],
+      "use": "Direct SMB over TCP (no NetBIOS) on 445. Clients try 445 first, then fall back to session on 139.",
+      "use_answers": ["file sharing", "windows shares", "remote access"]
+    },
+    {
+      "name": "ISAKMP",
+      "full_name": "Internet Protocol Security using ISAKMP",
+      "port": "500",
+      "transport": "udp",
+      "name_answers": ["ike", "ipsec", "ipsec ike", "isakmp"],
+      "full_name_answers": [
+        "internet security association and key management protocol",
+        "ipsec",
+        "ike"
+      ],
+      "use": "IPsec key management: Internet Security Association and Key Management Protocol.",
+      "use_answers": ["ipsec", "key management", "security association", "vpn keys"]
+    },
+    {
+      "name": "SMTPS",
+      "full_name": "Simple Mail Transfer Protocol Secure",
+      "port": "587",
+      "transport": "tcp",
+      "name_answers": ["smtp submission", "submission", "smtp starttls"],
+      "use": "Secure SMTP using TLS for encryption (mail submission).",
+      "use_answers": ["secure smtp", "encrypted mail", "mail submission", "outgoing mail"]
+    },
+    {
+      "name": "LDAPS",
+      "full_name": "Lightweight Directory Access Protocol Secure",
+      "port": "636",
+      "transport": "tcp",
+      "name_answers": ["ldap over tls", "ldap ssl"],
+      "use": "LDAP over TLS for encrypted directory traffic.",
+      "use_answers": ["secure ldap", "encrypted directory", "ldap over tls"]
+    },
+    {
+      "name": "FTPS data",
+      "full_name": "File Transfer Protocol Secure",
+      "port": "989",
+      "transport": "tcp",
+      "name_answers": ["ftps-data"],
+      "use": "FTP with TLS. Data channel; often 989. Can also run on 20.",
+      "use_answers": ["ftps data", "encrypted file transfer", "ftp over tls"]
+    },
+    {
+      "name": "FTPS control",
+      "full_name": "File Transfer Protocol Secure",
+      "port": "990",
+      "transport": "tcp",
+      "name_answers": ["ftps"],
+      "use": "FTP with TLS. Control channel; often 990. Can also run on 21.",
+      "use_answers": ["ftps", "ftp over tls", "encrypted ftp"]
+    },
+    {
+      "name": "IMAPS",
+      "full_name": "Internet Message Access Protocol Secure",
+      "port": "993",
+      "transport": "tcp",
+      "name_answers": ["imap over tls"],
+      "use": "IMAP over TLS for encrypted two-way email.",
+      "use_answers": ["secure imap", "encrypted email", "imap over tls"]
+    },
+    {
+      "name": "POP3S",
+      "full_name": "Post Office Protocol 3 Secure",
+      "port": "995",
+      "transport": "tcp",
+      "name_answers": ["pops", "pop3 over tls"],
+      "use": "POP over TLS for encrypted one-way email download.",
+      "use_answers": ["secure pop", "encrypted email", "pop over tls"]
+    },
+    {
+      "name": "RADIUS auth",
+      "full_name": "Remote Authentication Dial-In User Service",
+      "port": "1812",
+      "transport": "udp",
+      "name_answers": ["radius"],
+      "use": "AAA for network services. Authentication/authorization on 1812.",
+      "use_answers": ["aaa", "authentication", "network aaa"]
+    },
+    {
+      "name": "RADIUS accounting",
+      "full_name": "Remote Authentication Dial-In User Service",
+      "port": "1813",
+      "transport": "udp",
+      "name_answers": ["radius acct"],
+      "use": "RADIUS accounting (AAA). Accounting uses 1813.",
+      "use_answers": ["accounting", "aaa", "radius accounting"]
+    },
+    {
+      "name": "RDP",
+      "full_name": "Remote Desktop Protocol",
+      "port": "3389",
+      "transport": "tcp",
+      "name_answers": ["terminal services"],
+      "use": "Windows proprietary protocol for remote desktop connections.",
+      "use_answers": ["remote desktop", "remote connections", "remote"]
+    },
+    {
+      "name": "Diameter",
+      "port": "3868",
+      "transport": "tcp",
+      "use": "AAA protocol developed as an upgrade to RADIUS.",
+      "use_answers": ["aaa", "upgrade to radius", "radius upgrade"]
+    },
+    {
+      "name": "SRTP",
+      "full_name": "Secure Real Time Protocol",
+      "port": "5004",
+      "transport": "udp",
+      "full_name_answers": ["secure realtime transport protocol", "secure real-time transport protocol"],
+      "use": "Replaced RTP. Streams audio and video over UDP, with encryption.",
+      "use_answers": ["audio video", "stream audio", "voice video", "secure rtp"]
+    },
+    {
+      "name": "L2TP",
+      "full_name": "Layer 2 Tunneling Protocol",
+      "port": "1701",
+      "transport": "udp",
+      "use": "VPN tunnels over UDP. Needs IPsec for encryption. PPTP extension, data-link layer.",
+      "use_answers": ["vpn", "tunnels", "needs ipsec"]
+    },
+    {
+      "name": "PPTP",
+      "full_name": "Point to Point Tunneling Protocol",
+      "port": "1723",
+      "transport": "both",
+      "use": "Deprecated PPP-based VPN protocol. Replaced by SSTP / L2TP+IPsec.",
+      "use_answers": ["vpn", "deprecated vpn", "ppp vpn"]
+    },
+    {
+      "name": "TCP",
+      "full_name": "Transmission Control Protocol",
+      "port": null,
+      "transport": "tcp",
+      "clue": "Error checking",
+      "use": "IP suite transport with error checking so packets are not lost in transit.",
+      "use_answers": ["error checking", "reliable", "connection oriented", "connection-oriented"]
+    },
+    {
+      "name": "UDP",
+      "full_name": "User Datagram Protocol",
+      "port": null,
+      "transport": "udp",
+      "clue": "Best effort",
+      "use": "IP suite transport that sends datagrams best-effort. No error checking.",
+      "use_answers": ["best effort", "no error checking", "datagrams", "unreliable"]
+    }
+  ]
+}

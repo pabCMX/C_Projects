@@ -1,0 +1,99 @@
+{
+  "title": "Zero Trust",
+  "questions": [
+    {
+      "prompt": "Which Zero Trust component decides whether to grant access?",
+      "answers": ["policy engine", "pe", "pdp", "policy decision point"],
+      "reveal": "policy engine (PE / PDP)"
+    },
+    {
+      "prompt": "Which Zero Trust component enforces the decision?",
+      "answers": ["pep", "policy enforcement point"],
+      "reveal": "PEP (policy enforcement point)"
+    },
+    {
+      "prompt": "Which Zero Trust component writes/sends policy to the enforcer?",
+      "answers": ["policy administrator", "pa"],
+      "reveal": "policy administrator (PA)"
+    },
+    {
+      "prompt": "Which plane moves user traffic after the decision?",
+      "answers": ["data plane", "data"],
+      "reveal": "data plane"
+    },
+    {
+      "prompt": "Which plane do the policy engine and policy administrator live on?",
+      "answers": ["control plane", "control"],
+      "reveal": "control plane"
+    },
+    {
+      "prompt": "Zero Trust default access stance?",
+      "answers": ["deny", "implicit deny", "never trust", "deny by default"],
+      "reveal": "implicit deny / never trust"
+    },
+    {
+      "prompt": "Zero Trust core assumption about the environment?",
+      "answers": ["assume breach", "breach", "already compromised"],
+      "reveal": "assume breach"
+    },
+    {
+      "prompt": "Never trust, always _____?",
+      "answers": ["verify", "always verify"],
+      "reveal": "verify"
+    },
+    {
+      "prompt": "Who terminates the session if policy says no?",
+      "answers": ["pep", "policy enforcement point"],
+      "reveal": "PEP"
+    },
+    {
+      "prompt": "Who issues session commands/credentials to the PEP?",
+      "answers": ["policy administrator", "pa"],
+      "reveal": "policy administrator (PA)"
+    },
+    {
+      "prompt": "Subject + resource + environment are inputs to which component?",
+      "answers": ["policy engine", "pe", "pdp", "policy decision point"],
+      "reveal": "policy engine"
+    },
+    {
+      "prompt": "Access based on policy, not network location — name?",
+      "answers": ["policy-driven access control", "policy driven access control", "policy-driven"],
+      "reveal": "policy-driven access control"
+    },
+    {
+      "prompt": "Identity that changes with risk/context — name?",
+      "answers": ["adaptive identity", "adaptive"],
+      "reveal": "adaptive identity"
+    },
+    {
+      "prompt": "Limit blast radius by isolating workloads — two acceptable names?",
+      "answers": [
+        "microsegmentation",
+        "threat scope reduction",
+        "micro-segmentation"
+      ],
+      "reveal": "microsegmentation / threat scope reduction"
+    },
+    {
+      "prompt": "Does the data plane move traffic before or after the access decision?",
+      "answers": ["after", "after the decision"],
+      "reveal": "after the decision"
+    },
+    {
+      "prompt": "Control plane vs data plane: which one carries packets for the user?",
+      "answers": ["data plane", "data"],
+      "reveal": "data plane"
+    },
+    {
+      "prompt": "PE decides, PA writes, PEP _____?",
+      "answers": ["enforces", "enforce"],
+      "reveal": "enforces"
+    },
+    {
+      "prompt": "Trust is never granted just because a host is 'inside' the LAN. True or false?",
+      "answers": ["true"],
+      "reveal": "true"
+    }
+  ]
+}
