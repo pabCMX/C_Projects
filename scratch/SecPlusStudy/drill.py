@@ -7,12 +7,17 @@ import json
 import random
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 BANKS_DIR = ROOT / "banks"
 STATS_PATH = ROOT / "stats.json"
 WINDOW = 20
+MAX_WEAKNESS = 10
+MISS_PENALTY = 2
+CORRECT_RECOVERY = 1
+RETRY_GAP = 4
 
 MENU = [
     ("1", "ports.json", "Ports and protocols"),
@@ -49,6 +54,7 @@ def normalize(text: str) -> str:
 
 
 def matches(user: str, answers: list[str]) -> bool:
+    """Match only explicit aliases, plus an optional transport after a port."""
     got = normalize(user)
     if not got:
         return False
@@ -59,14 +65,6 @@ def matches(user: str, answers: list[str]) -> bool:
     first = got.split(" ", 1)[0]
     if first in accepted and first.isdigit():
         return True
-    got_set = set(got.split())
-    for item in accepted:
-        item_set = set(item.split())
-        if len(item_set) >= 3 and got_set == item_set:
-            return True
-        # "used for remote access" should hit a "remote access" alias.
-        if len(item) >= 5 and item in got:
-            return True
     return False
 
 
@@ -88,7 +86,7 @@ def extra_line(item: dict) -> str:
 
 
 def expand_ports(bank: dict) -> list[dict]:
-    items = bank["items"]
+    items = [item for item in bank["items"] if item.get("core", True)]
     by_port: dict[str, list[dict]] = {}
     for item in items:
         port = item.get("port")
@@ -101,6 +99,7 @@ def expand_ports(bank: dict) -> list[dict]:
         name = item["name"]
         port = item.get("port")
         transport = item.get("transport")
+        item_id = f"ports:{port}" if port else f"ports:{item['id']}"
 
         if not port:
             clue = item.get("clue")
@@ -112,6 +111,8 @@ def expand_ports(bank: dict) -> list[dict]:
                         "answers": t_answers,
                         "reveal": str(transport).upper(),
                         "extra": extra,
+                        "item_id": item_id,
+                        "variant_id": f"{item['id']}:transport",
                     }
                 )
             continue
@@ -124,6 +125,8 @@ def expand_ports(bank: dict) -> list[dict]:
                 "answers": [port_s, *item.get("port_answers", [])],
                 "reveal": f"{port_s} {t_label}",
                 "extra": extra,
+                "item_id": item_id,
+                "variant_id": f"{item['id']}:port",
             }
         )
         if transport == "both":
@@ -138,6 +141,8 @@ def expand_ports(bank: dict) -> list[dict]:
                 "answers": t_answers,
                 "reveal": t_reveal,
                 "extra": extra,
+                "item_id": item_id,
+                "variant_id": f"{item['id']}:transport",
             }
         )
 
@@ -151,16 +156,55 @@ def expand_ports(bank: dict) -> list[dict]:
         names = []
         for entry in group:
             names.append(entry["name"])
-            names.extend(entry.get("name_answers", []))
+            names.extend(entry.get("aliases", []))
         questions.append(
             {
-                "prompt": f"Port {port}?",
+                "prompt": f"Port {port} — name one associated protocol?",
                 "answers": names,
                 "reveal": " / ".join(entry["name"] for entry in group),
                 "extra": "  |  ".join(extra_line(entry) for entry in group),
+                "item_id": f"ports:{port}",
+                "variant_id": f"port-{port}:reverse",
             }
         )
     return questions
+
+
+def expand_controls(bank: dict) -> list[dict]:
+    questions = []
+    for item in bank["items"]:
+        display = item.get("display") or item["name"]
+        item_id = f"controls:{item['id']}"
+        rationale = item["rationale"]
+        for axis in ("category", "type"):
+            canonical = item[axis]
+            alternatives = item.get(f"{axis}_alternatives", [])
+            answers = [canonical, *alternatives]
+            reveal = canonical
+            if alternatives:
+                reveal += f" ({' / '.join(alternatives)} also accepted)"
+            questions.append(
+                {
+                    "prompt": f"{display} — {axis}?",
+                    "answers": answers,
+                    "reveal": reveal,
+                    "extra": rationale,
+                    "item_id": item_id,
+                    "variant_id": f"{item['id']}:{axis}",
+                }
+            )
+    return questions
+
+
+def prepare_questions(bank_name: str, questions: list[dict]) -> list[dict]:
+    prepared = []
+    for index, question in enumerate(questions):
+        q = dict(question)
+        q.setdefault("item_id", f"{bank_name}:{q.get('id', index)}")
+        q.setdefault("variant_id", f"{q['item_id']}:{q.get('id', index)}")
+        q.setdefault("extra", q.get("explanation"))
+        prepared.append(q)
+    return prepared
 
 
 def load_questions(filename: str) -> tuple[str, list[dict]]:
@@ -168,7 +212,9 @@ def load_questions(filename: str) -> tuple[str, list[dict]]:
     title = bank["title"]
     if bank.get("kind") == "ports":
         return title, expand_ports(bank)
-    return title, bank["questions"]
+    if bank.get("kind") == "controls":
+        return title, expand_controls(bank)
+    return title, prepare_questions(filename, bank["questions"])
 
 
 def load_all() -> tuple[str, list[dict]]:
@@ -187,14 +233,15 @@ def empty_bank() -> dict:
 
 def load_stats() -> dict:
     if not STATS_PATH.exists():
-        return {"window": WINDOW, "banks": {}}
+        return {"window": WINDOW, "banks": {}, "items": {}}
     try:
         with STATS_PATH.open(encoding="utf-8") as fh:
             data = json.load(fh)
     except (OSError, json.JSONDecodeError):
-        return {"window": WINDOW, "banks": {}}
+        return {"window": WINDOW, "banks": {}, "items": {}}
     data.setdefault("window", WINDOW)
     data.setdefault("banks", {})
+    data.setdefault("items", {})
     return data
 
 
@@ -211,6 +258,27 @@ def bank_stats(stats: dict, key: str) -> dict:
     slot.setdefault("at_bats", 0)
     slot.setdefault("recent", [])
     return slot
+
+
+def item_stats(stats: dict, item_id: str) -> dict:
+    items = stats.setdefault("items", {})
+    slot = items.setdefault(
+        item_id, {"weakness": 0, "attempts": 0, "correct": 0, "wrong": 0}
+    )
+    slot.setdefault("weakness", 0)
+    slot.setdefault("attempts", 0)
+    slot.setdefault("correct", 0)
+    slot.setdefault("wrong", 0)
+    return slot
+
+
+def weak_item_count(stats: dict, questions: list[dict]) -> int:
+    item_ids = {q["item_id"] for q in questions}
+    return sum(
+        1
+        for item_id in item_ids
+        if stats.get("items", {}).get(item_id, {}).get("weakness", 0) > 0
+    )
 
 
 def avg_text(hits: int, n: int) -> str:
@@ -234,7 +302,7 @@ def lifetime_text(slot: dict) -> str:
     return f"lifetime {avg_text(hits, at_bats)} ({hits}/{at_bats})"
 
 
-def record_result(stats: dict, key: str, correct: bool) -> dict:
+def record_result(stats: dict, key: str, item_id: str, correct: bool) -> dict:
     slot = bank_stats(stats, key)
     slot["at_bats"] += 1
     if correct:
@@ -242,8 +310,51 @@ def record_result(stats: dict, key: str, correct: bool) -> dict:
     recent = slot["recent"]
     recent.append(1 if correct else 0)
     slot["recent"] = recent[-WINDOW:]
+    item = item_stats(stats, item_id)
+    item["attempts"] += 1
+    if correct:
+        item["correct"] += 1
+        item["weakness"] = max(0, item["weakness"] - CORRECT_RECOVERY)
+    else:
+        item["wrong"] += 1
+        item["weakness"] = min(MAX_WEAKNESS, item["weakness"] + MISS_PENALTY)
     save_stats(stats)
     return slot
+
+
+def group_questions(questions: list[dict]) -> dict[str, list[dict]]:
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for question in questions:
+        groups[question["item_id"]].append(question)
+    return dict(groups)
+
+
+def choose_item(
+    groups: dict[str, list[dict]],
+    stats: dict,
+    recent_items: list[str],
+    rng=random,
+) -> str:
+    item_ids = list(groups)
+    candidates = [item_id for item_id in item_ids if item_id not in recent_items[-2:]]
+    if not candidates:
+        candidates = item_ids
+    weights = [
+        1 + 2 * item_stats(stats, item_id)["weakness"] for item_id in candidates
+    ]
+    return rng.choices(candidates, weights=weights, k=1)[0]
+
+
+def choose_variant(
+    variants: list[dict],
+    variant_counts: dict[str, int],
+    rng=random,
+) -> dict:
+    least_seen = min(variant_counts[q["variant_id"]] for q in variants)
+    candidates = [
+        q for q in variants if variant_counts[q["variant_id"]] == least_seen
+    ]
+    return rng.choice(candidates)
 
 
 def color(text: str, code: str) -> str:
@@ -269,40 +380,71 @@ def drill(title: str, questions: list[dict], stats: dict, key: str) -> None:
         return
 
     slot = bank_stats(stats, key)
+    groups = group_questions(questions)
     print()
-    print(f"=== {title} ({len(questions)} questions) ===")
-    print("q = back to menu (app stays running). Empty answer counts as a miss.")
+    print(f"=== {title} ({len(groups)} items / {len(questions)} question forms) ===")
+    print("q = menu, s = skip. Empty answer counts as a miss.")
     print(f"{ba_text(slot)}  {lifetime_text(slot)}")
+    print(f"weak items: {weak_item_count(stats, questions)}")
     print()
 
     correct = 0
     total = 0
     missed: list[tuple[str, str]] = []
-    queue = questions[:]
-    random.shuffle(queue)
+    recent_items: list[str] = []
+    retries: list[tuple[int, str]] = []
+    variant_counts: dict[str, int] = defaultdict(int)
 
     while True:
-        if not queue:
-            queue = questions[:]
-            random.shuffle(queue)
-            print(color("— reshuffled —", "90"))
+        ready = next(
+            (
+                (index, item_id)
+                for index, (after, item_id) in enumerate(retries)
+                if after <= total
+            ),
+            None,
+        )
+        if ready is not None:
+            retry_index, selected_item = ready
+            retries.pop(retry_index)
+            reason = "missed recently"
+        else:
+            selected_item = choose_item(groups, stats, recent_items)
+            weakness = item_stats(stats, selected_item)["weakness"]
+            reason = "weak item" if weakness else "normal mix"
 
-        q = queue.pop()
+        q = choose_variant(groups[selected_item], variant_counts)
+        variant_counts[q["variant_id"]] += 1
+        recent_items.append(selected_item)
+        recent_items = recent_items[-4:]
+        print(color(f"[{reason}]", "90"))
         raw = ask(f"{q['prompt']} ")
         token = raw.strip().lower()
         if token in {"q", "quit", "menu", "m"}:
             break
+        if token in {"s", "skip"}:
+            print(color(f"Skipped. Answer: {q['reveal']}", "90"))
+            if q.get("extra"):
+                print(color(f"  {q['extra']}", "90"))
+            if reason == "missed recently":
+                retries.append((total + 1, q["item_id"]))
+            continue
 
         total += 1
         hit = matches(raw, q["answers"])
-        slot = record_result(stats, key, hit)
+        slot = record_result(stats, key, q["item_id"], hit)
         ba = ba_text(slot)
         extra = q.get("extra")
         if hit:
             correct += 1
-            print(color("Correct!", "32"), f"  [{correct}/{total}]  {ba}")
+            print(
+                color("Correct!", "32"),
+                f"→ {q['reveal']}  [{correct}/{total}]  {ba}",
+            )
         else:
             missed.append((q["prompt"], q["reveal"]))
+            if not any(item_id == q["item_id"] for _after, item_id in retries):
+                retries.append((total + RETRY_GAP, q["item_id"]))
             print(color("Wrong!", "31"), q["reveal"], f"  [{correct}/{total}]  {ba}")
         if extra:
             print(color(f"  {extra}", "90"))
@@ -335,12 +477,113 @@ def menu(stats: dict) -> None:
     print()
     for key, filename, title in MENU:
         slot = bank_stats(stats, filename)
-        print(f"  {key}) {title:<28}  {ba_text(slot)}")
+        if filename == "all":
+            _loaded_title, questions = load_all()
+        else:
+            _loaded_title, questions = load_questions(filename)
+        weak = weak_item_count(stats, questions)
+        print(f"  {key}) {title:<28}  {ba_text(slot)}  weak {weak}")
     print("  q) Quit")
     print()
 
 
+def validate_bank(filename: str, bank: dict) -> list[str]:
+    errors: list[str] = []
+    seen_ids: set[str] = set()
+    kind = bank.get("kind")
+    records = bank.get("items") if kind in {"ports", "controls"} else bank.get("questions")
+    if not isinstance(records, list):
+        return [f"{filename}: expected a list of items/questions"]
+
+    categories = {"technical", "managerial", "operational", "physical"}
+    control_types = {
+        "preventive",
+        "detective",
+        "corrective",
+        "deterrent",
+        "compensating",
+        "directive",
+    }
+    for index, record in enumerate(records):
+        record_id = record.get("id")
+        label = f"{filename}[{index}]"
+        if not record_id:
+            errors.append(f"{label}: missing stable id")
+        elif record_id in seen_ids:
+            errors.append(f"{label}: duplicate id {record_id!r}")
+        else:
+            seen_ids.add(record_id)
+
+        if kind == "ports":
+            transport = record.get("transport")
+            if transport not in {"tcp", "udp", "both"}:
+                errors.append(f"{label}: invalid transport {transport!r}")
+            if not record.get("name"):
+                errors.append(f"{label}: missing name")
+            if record.get("port") is None and not record.get("clue"):
+                errors.append(f"{label}: portless item needs a clue")
+        elif kind == "controls":
+            if record.get("category") not in categories:
+                errors.append(f"{label}: invalid control category")
+            if record.get("type") not in control_types:
+                errors.append(f"{label}: invalid control type")
+            if not record.get("rationale"):
+                errors.append(f"{label}: missing rationale")
+        else:
+            if not record.get("prompt"):
+                errors.append(f"{label}: missing prompt")
+            if not record.get("answers"):
+                errors.append(f"{label}: missing answers")
+            if not record.get("reveal"):
+                errors.append(f"{label}: missing canonical reveal")
+            if not (record.get("explanation") or record.get("extra")):
+                errors.append(f"{label}: missing explanation")
+
+    try:
+        if kind == "ports":
+            expanded = expand_ports(bank)
+        elif kind == "controls":
+            expanded = expand_controls(bank)
+        else:
+            expanded = prepare_questions(filename, records)
+    except (KeyError, TypeError, ValueError) as exc:
+        errors.append(f"{filename}: cannot expand bank: {exc}")
+        return errors
+
+    seen_variants: set[str] = set()
+    for question in expanded:
+        variant_id = question["variant_id"]
+        if variant_id in seen_variants:
+            errors.append(f"{filename}: duplicate question variant {variant_id!r}")
+        seen_variants.add(variant_id)
+        if not question.get("answers"):
+            errors.append(f"{filename}: {variant_id!r} has no answers")
+    return errors
+
+
+def validate_all_banks() -> list[str]:
+    errors = []
+    for _key, filename, _title in MENU:
+        if filename == "all":
+            continue
+        try:
+            bank = load_json(filename)
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"{filename}: {exc}")
+            continue
+        errors.extend(validate_bank(filename, bank))
+    return errors
+
+
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] == "--validate":
+        errors = validate_all_banks()
+        if errors:
+            print("\n".join(errors))
+            return 1
+        print("All Security+ question banks are valid.")
+        return 0
+
     stats = load_stats()
     while True:
         menu(stats)

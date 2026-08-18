@@ -2,114 +2,172 @@
   "title": "Threat vectors",
   "questions": [
     {
-      "prompt": "USB drop — vector?",
-      "answers": ["removable device", "removable media", "removable devices"],
-      "reveal": "removable device"
+      "id": "removable-usb",
+      "prompt": "Unknown USB drive left in a parking lot — vector?",
+      "answers": ["removable device", "removable media"],
+      "reveal": "removable device",
+      "explanation": "A removable device can introduce malware or remove data while bypassing network defenses."
     },
     {
-      "prompt": "PNG / malicious image — vector?",
-      "answers": ["image-based", "image based", "image"],
-      "reveal": "image-based"
+      "id": "image-svg",
+      "prompt": "Malicious script embedded in an SVG image — vector?",
+      "answers": ["image-based", "image based"],
+      "reveal": "image-based",
+      "explanation": "SY0-701 names image-based delivery as its own threat-vector category."
     },
     {
-      "prompt": "Word doc / PDF / .exe — vector?",
-      "answers": ["file-based", "file based", "file"],
-      "reveal": "file-based"
+      "id": "file-macro",
+      "prompt": "Malicious macro inside an Office document — vector?",
+      "answers": ["file-based", "file based"],
+      "reveal": "file-based",
+      "explanation": "The malicious content is delivered in a file that the target opens."
     },
     {
-      "prompt": "Windows XP with no vendor support — vector?",
-      "answers": ["unsupported system", "unsupported systems", "unsupported os", "unsupported application"],
-      "reveal": "unsupported system"
+      "id": "message-email",
+      "prompt": "Phishing link delivered by email — delivery vector?",
+      "answers": ["message-based", "message based", "email"],
+      "reveal": "message-based (email)",
+      "explanation": "Email, SMS, and instant messaging are the three message-based examples in objective 2.2."
     },
     {
-      "prompt": "Phishing email — vector?",
-      "answers": ["message-based", "email", "message based"],
-      "reveal": "message-based (email)"
+      "id": "message-sms",
+      "prompt": "Smishing link delivered by SMS — delivery vector?",
+      "answers": ["message-based", "message based", "sms"],
+      "reveal": "message-based (SMS)",
+      "explanation": "Smishing is social engineering delivered through the message-based SMS channel."
     },
     {
-      "prompt": "Smishing / SMS lure — vector?",
-      "answers": ["message-based", "sms", "message based"],
-      "reveal": "message-based (SMS)"
+      "id": "message-im",
+      "prompt": "Malicious link sent through Slack or instant messaging — delivery vector?",
+      "answers": ["message-based", "message based", "instant messaging", "im"],
+      "reveal": "message-based (instant messaging)",
+      "explanation": "Instant messaging is a message-based threat vector."
     },
     {
-      "prompt": "Malicious Slack/IM link — vector?",
-      "answers": ["message-based", "im", "instant message", "message based"],
-      "reveal": "message-based (IM)"
+      "id": "message-social",
+      "prompt": "Phishing lure sent in a social-media direct message — delivery vector?",
+      "answers": ["message-based", "message based", "instant messaging", "direct message"],
+      "reveal": "message-based",
+      "explanation": "The delivery channel is a message even though the service is social media."
     },
     {
-      "prompt": "Vishing / fake helpdesk call — vector?",
+      "id": "voice-vishing",
+      "prompt": "Fake help-desk phone call asking for a password — vector?",
       "answers": ["voice call", "voice", "vishing"],
-      "reveal": "voice call"
+      "reveal": "voice call",
+      "explanation": "Vishing is social engineering delivered through a voice-call vector."
     },
     {
-      "prompt": "Evil twin / open cafe Wi-Fi — vector?",
-      "answers": ["unsecure network", "wireless", "unsecure wireless", "insecure network"],
-      "reveal": "unsecure network (wireless)"
+      "id": "vulnerable-software",
+      "prompt": "Attacker exploits an unpatched browser flaw — vector?",
+      "answers": ["vulnerable software", "client-based vulnerable software", "client based vulnerable software"],
+      "reveal": "vulnerable software (client-based)",
+      "explanation": "The attacker reaches the system through an exploitable flaw in client software."
     },
     {
-      "prompt": "Bluetooth pairing attack — vector?",
-      "answers": ["unsecure network", "bluetooth", "insecure network"],
-      "reveal": "unsecure network (Bluetooth)"
+      "id": "unsupported-system",
+      "prompt": "End-of-life operating system no longer receives fixes — vector?",
+      "answers": ["unsupported system", "unsupported systems", "unsupported systems and applications"],
+      "reveal": "unsupported systems and applications",
+      "explanation": "Unsupported products accumulate known flaws because the vendor no longer provides security fixes."
     },
     {
-      "prompt": "Telnet left open on a router — vector?",
-      "answers": ["open service ports", "open port", "open service port"],
-      "reveal": "open service ports"
+      "id": "unsecure-wireless",
+      "prompt": "Evil-twin access point at a cafe — vector?",
+      "answers": ["unsecure network", "unsecure networks", "wireless", "insecure network"],
+      "reveal": "unsecure network (wireless)",
+      "explanation": "The attacker uses an untrusted wireless network path."
     },
     {
-      "prompt": "admin/admin still enabled — vector?",
-      "answers": ["default credentials", "default password", "default accounts"],
-      "reveal": "default credentials"
+      "id": "unsecure-wired",
+      "prompt": "Unprotected network jack in a public lobby — vector?",
+      "answers": ["unsecure network", "unsecure networks", "wired", "insecure network"],
+      "reveal": "unsecure network (wired)",
+      "explanation": "Unsecure networks include wired, wireless, and Bluetooth paths."
     },
     {
-      "prompt": "Compromised software vendor — vector?",
+      "id": "unsecure-bluetooth",
+      "prompt": "Unauthorized Bluetooth pairing attack — vector?",
+      "answers": ["unsecure network", "unsecure networks", "bluetooth", "insecure network"],
+      "reveal": "unsecure network (Bluetooth)",
+      "explanation": "CompTIA lists Bluetooth beneath unsecure networks."
+    },
+    {
+      "id": "open-port",
+      "prompt": "Internet-facing Telnet service left enabled — vector?",
+      "answers": ["open service ports", "open service port", "open port"],
+      "reveal": "open service ports",
+      "explanation": "An unnecessary listening service increases the reachable attack surface."
+    },
+    {
+      "id": "default-credentials",
+      "prompt": "Network device still uses admin/admin — vector?",
+      "answers": ["default credentials", "default password", "default account"],
+      "reveal": "default credentials",
+      "explanation": "Vendor defaults are widely known and can provide immediate unauthorized access."
+    },
+    {
+      "id": "supply-vendor",
+      "prompt": "Trusted software update is compromised at the vendor — vector?",
       "answers": ["supply chain", "vendor", "supplier"],
-      "reveal": "supply chain"
+      "reveal": "supply chain (vendor)",
+      "explanation": "The attacker abuses trust in an upstream vendor or supplier."
     },
     {
-      "prompt": "MSP / managed service provider breach — vector?",
-      "answers": ["supply chain", "msp", "managed service provider"],
-      "reveal": "supply chain (MSP)"
+      "id": "supply-msp",
+      "prompt": "Managed service provider breach reaches its customers — vector?",
+      "answers": ["supply chain", "managed service provider", "msp"],
+      "reveal": "supply chain (managed service provider)",
+      "explanation": "SY0-701 explicitly lists managed service providers under supply-chain vectors."
     },
     {
-      "prompt": "Typosquatting paypa1.com — vector family?",
-      "answers": ["human", "social engineering", "typosquatting"],
-      "reveal": "human (typosquatting)"
+      "id": "human-phishing",
+      "prompt": "Fraudulent message tricks a user into revealing credentials — human technique?",
+      "answers": ["phishing"],
+      "reveal": "phishing",
+      "explanation": "Phishing is the broad social-engineering attempt; smishing and vishing specify delivery channels."
     },
     {
-      "prompt": "Business email compromise — vector family?",
-      "answers": ["human", "social engineering", "bec"],
-      "reveal": "human (BEC)"
+      "id": "human-bec",
+      "prompt": "Impersonated executive requests an urgent wire transfer — human technique?",
+      "answers": ["business email compromise", "bec"],
+      "reveal": "business email compromise (BEC)",
+      "explanation": "BEC impersonates a trusted business identity to induce a fraudulent action."
     },
     {
-      "prompt": "Watering hole — vector family?",
-      "answers": ["human", "social engineering", "watering hole"],
-      "reveal": "human (watering hole)"
+      "id": "human-pretexting",
+      "prompt": "Attacker invents a believable story to obtain information — human technique?",
+      "answers": ["pretexting", "pretext"],
+      "reveal": "pretexting",
+      "explanation": "The fabricated scenario or identity is the pretext."
     },
     {
-      "prompt": "Brand impersonation / fake login page — vector family?",
-      "answers": ["human", "social engineering", "brand impersonation"],
-      "reveal": "human (brand impersonation)"
+      "id": "human-watering-hole",
+      "prompt": "Attacker compromises a website frequently used by the target group — human technique?",
+      "answers": ["watering hole", "watering-hole"],
+      "reveal": "watering hole",
+      "explanation": "A watering-hole attack waits at a site the intended targets already trust and visit."
     },
     {
-      "prompt": "Pretexting — vector family?",
-      "answers": ["human", "social engineering"],
-      "reveal": "human (pretexting)"
+      "id": "human-brand",
+      "prompt": "Fake login page copies a bank’s logo and design — human technique?",
+      "answers": ["brand impersonation", "impersonation"],
+      "reveal": "brand impersonation",
+      "explanation": "The attacker copies a trusted brand to make the lure appear legitimate."
     },
     {
-      "prompt": "QR code with a malicious payload — closest vector?",
-      "answers": ["image-based", "image based", "image"],
-      "reveal": "image-based"
+      "id": "human-typosquatting",
+      "prompt": "Attacker registers paypa1.com to catch mistyped visits — human technique?",
+      "answers": ["typosquatting", "typo squatting"],
+      "reveal": "typosquatting",
+      "explanation": "A look-alike domain exploits typing mistakes or a quick visual check."
     },
     {
-      "prompt": "Macro-enabled .xlsm emailed to finance — two vectors?",
-      "answers": ["message-based file-based", "file-based message-based", "email file"],
-      "reveal": "message-based + file-based"
-    },
-    {
-      "prompt": "End-of-life NAS still on the LAN — vector?",
-      "answers": ["unsupported system", "unsupported systems", "unsupported application"],
-      "reveal": "unsupported system"
+      "id": "human-misinfo",
+      "prompt": "False information is deliberately spread to manipulate people — human technique?",
+      "answers": ["disinformation", "misinformation disinformation"],
+      "reveal": "disinformation",
+      "explanation": "Disinformation is intentionally false; misinformation may be shared without intent to deceive."
     }
   ]
 }

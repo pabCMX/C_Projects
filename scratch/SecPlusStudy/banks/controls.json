@@ -1,425 +1,307 @@
 {
   "title": "Control category vs type",
-  "questions": [
+  "kind": "controls",
+  "items": [
+    {
+      "id": "siem",
+      "name": "SIEM",
+      "display": "Security information and event management (SIEM)",
+      "category": "technical",
+      "type": "detective",
+      "rationale": "A SIEM is technology that correlates logs and alerts analysts to suspicious activity."
+    },
     {
-      "prompt": "SIEM — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
+      "id": "log-review",
+      "name": "Log review",
+      "category": "operational",
+      "type": "detective",
+      "rationale": "People perform the review as an operational process to discover events that already occurred."
     },
-    {
-      "prompt": "SIEM — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "Log review — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Log review — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "Firewall — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "Firewall — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "IDS — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "IDS — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "IPS — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "IPS — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "Encryption — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "Encryption — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "MFA — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "MFA — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "ACL — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "ACL — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "DLP — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "DLP — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "FIM — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "FIM — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "Antivirus — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "Antivirus — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "Honeypot — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "Honeypot — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "Warning banner — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "Warning banner — type?",
-      "answers": ["deterrent"],
-      "reveal": "deterrent"
-    },
-    {
-      "prompt": "Least privilege — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "Security awareness training — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Security awareness training — type?",
-      "answers": ["preventive", "directive"],
-      "reveal": "preventive (directive also counts)"
-    },
-    {
-      "prompt": "Patch management — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Patch management — type?",
-      "answers": ["corrective", "preventive"],
-      "reveal": "corrective (preventive also counts)"
-    },
-    {
-      "prompt": "Backup restoration — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Backup restoration — type?",
-      "answers": ["corrective"],
-      "reveal": "corrective"
-    },
-    {
-      "prompt": "Incident response — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Incident response — type?",
-      "answers": ["corrective"],
-      "reveal": "corrective"
-    },
-    {
-      "prompt": "Job rotation — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Job rotation — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "Mandatory vacation — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Mandatory vacation — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "Separation of duties — category?",
-      "answers": ["managerial", "operational", "administrative"],
-      "reveal": "managerial"
-    },
-    {
-      "prompt": "Separation of duties — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "Background checks — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Background checks — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
-    },
-    {
-      "prompt": "Penetration test — category?",
-      "answers": ["operational"],
-      "reveal": "operational"
-    },
-    {
-      "prompt": "Penetration test — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
-    },
-    {
-      "prompt": "Vulnerability scan — category?",
-      "answers": ["technical"],
-      "reveal": "technical"
-    },
-    {
-      "prompt": "Vulnerability scan — type?",
-      "answers": ["detective"],
-      "reveal": "detective"
+    {
+      "id": "firewall",
+      "name": "Firewall",
+      "category": "technical",
+      "type": "preventive",
+      "rationale": "A firewall uses technical rules to block disallowed network traffic before it reaches a target."
     },
     {
-      "prompt": "AUP / security policy — category?",
-      "answers": ["managerial", "administrative"],
-      "reveal": "managerial"
+      "id": "ids",
+      "name": "IDS",
+      "display": "Intrusion detection system (IDS)",
+      "category": "technical",
+      "type": "detective",
+      "rationale": "An IDS monitors and alerts on suspicious activity; it does not normally block the traffic."
     },
     {
-      "prompt": "AUP / security policy — type?",
-      "answers": ["directive"],
-      "reveal": "directive"
+      "id": "ips",
+      "name": "IPS",
+      "display": "Intrusion prevention system (IPS)",
+      "category": "technical",
+      "type": "preventive",
+      "rationale": "An IPS is placed inline so it can automatically block malicious traffic."
     },
     {
-      "prompt": "Risk assessment — category?",
-      "answers": ["managerial", "administrative"],
-      "reveal": "managerial"
+      "id": "encryption",
+      "name": "Encryption",
+      "category": "technical",
+      "type": "preventive",
+      "rationale": "Encryption uses technology to prevent unauthorized readers from understanding protected data."
     },
     {
-      "prompt": "NDA — category?",
-      "answers": ["managerial", "administrative"],
-      "reveal": "managerial"
+      "id": "mfa",
+      "name": "MFA",
+      "display": "Multifactor authentication (MFA)",
+      "category": "technical",
+      "type": "preventive",
+      "rationale": "MFA technically enforces multiple factors before granting access, preventing password-only compromise."
     },
     {
-      "prompt": "NDA — type?",
-      "answers": ["directive", "preventive"],
-      "reveal": "directive"
+      "id": "acl",
+      "name": "ACL",
+      "display": "Access control list (ACL)",
+      "category": "technical",
+      "type": "preventive",
+      "rationale": "An ACL is a technical rule set that prevents unauthorized access to a resource or network."
     },
     {
-      "prompt": "Change management — category?",
-      "answers": ["managerial", "operational", "administrative"],
-      "reveal": "managerial"
+      "id": "dlp",
+      "name": "DLP",
+      "display": "Data loss prevention (DLP)",
+      "category": "technical",
+      "type": "preventive",
+      "type_alternatives": ["detective"],
+      "rationale": "DLP can detect sensitive-data movement and, when configured to block it, primarily prevents disclosure."
     },
     {
-      "prompt": "CCTV / cameras — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "fim",
+      "name": "FIM",
+      "display": "File integrity monitoring (FIM)",
+      "category": "technical",
+      "type": "detective",
+      "rationale": "FIM compares files with a known-good baseline and alerts when unauthorized changes are detected."
     },
     {
-      "prompt": "CCTV / cameras — type?",
-      "answers": ["detective", "deterrent"],
-      "reveal": "detective (deterrent also counts)"
+      "id": "antivirus",
+      "name": "Antivirus",
+      "category": "technical",
+      "type": "preventive",
+      "type_alternatives": ["detective"],
+      "rationale": "Antivirus can block known malware and also detect malware already present; the scenario determines the role."
     },
     {
-      "prompt": "Guards — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "honeypot",
+      "name": "Honeypot",
+      "category": "technical",
+      "type": "detective",
+      "rationale": "A honeypot is decoy technology used to detect and study unauthorized activity."
     },
     {
-      "prompt": "Guards — type?",
-      "answers": ["detective", "preventive"],
-      "reveal": "detective"
+      "id": "warning-banner",
+      "name": "Warning banner",
+      "category": "technical",
+      "type": "directive",
+      "type_alternatives": ["deterrent"],
+      "rationale": "A login banner directs users by stating authorized-use rules and can also deter misuse through legal notice."
     },
     {
-      "prompt": "Locks — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "least-privilege",
+      "name": "System-enforced least privilege",
+      "category": "technical",
+      "type": "preventive",
+      "rationale": "Access-control technology limits accounts to required permissions, preventing excess access."
     },
     {
-      "prompt": "Locks — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
+      "id": "awareness-training",
+      "name": "Security awareness training",
+      "category": "operational",
+      "type": "directive",
+      "type_alternatives": ["preventive"],
+      "rationale": "Training is delivered through an operational people process and directs users toward required secure behavior."
     },
     {
-      "prompt": "Mantrap / vestibule — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "patch-management",
+      "name": "Patch management",
+      "category": "operational",
+      "type": "corrective",
+      "type_alternatives": ["preventive"],
+      "rationale": "The process corrects known software flaws; applying patches also prevents later exploitation."
     },
     {
-      "prompt": "Mantrap / vestibule — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
+      "id": "backup-restoration",
+      "name": "Backup restoration",
+      "category": "operational",
+      "type": "corrective",
+      "rationale": "People follow a recovery process to restore data and correct the impact of a failure or attack."
     },
     {
-      "prompt": "Bollards — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "incident-response",
+      "name": "Incident response",
+      "category": "operational",
+      "type": "corrective",
+      "rationale": "Responders contain, eradicate, and recover from an incident after it occurs."
     },
     {
-      "prompt": "Bollards — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
+      "id": "job-rotation",
+      "name": "Job rotation",
+      "category": "operational",
+      "type": "detective",
+      "rationale": "Rotating duties can expose irregularities when another person performs and reviews the work."
     },
     {
-      "prompt": "Fence — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "mandatory-vacation",
+      "name": "Mandatory vacation",
+      "category": "operational",
+      "type": "detective",
+      "rationale": "Requiring an employee to step away may reveal fraud that depended on continuous concealment."
     },
     {
-      "prompt": "Fence — type?",
-      "answers": ["deterrent", "preventive"],
-      "reveal": "deterrent (preventive also counts)"
+      "id": "separation-duties",
+      "name": "Separation of duties",
+      "category": "managerial",
+      "type": "preventive",
+      "rationale": "Management divides critical authority so one person cannot complete and conceal a sensitive action alone."
     },
     {
-      "prompt": "Lighting — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "background-checks",
+      "name": "Background checks",
+      "category": "operational",
+      "type": "preventive",
+      "rationale": "Personnel carry out screening before access is granted to reduce insider risk."
     },
     {
-      "prompt": "Lighting — type?",
-      "answers": ["deterrent"],
-      "reveal": "deterrent"
+      "id": "penetration-test",
+      "name": "Penetration test",
+      "category": "operational",
+      "type": "detective",
+      "rationale": "Authorized testers actively exercise systems to discover exploitable weaknesses."
     },
     {
-      "prompt": "Signage — category?",
-      "answers": ["physical", "managerial"],
-      "reveal": "physical"
+      "id": "vulnerability-scan",
+      "name": "Vulnerability scan",
+      "category": "technical",
+      "type": "detective",
+      "rationale": "Scanning technology detects known weaknesses and reports them for remediation."
     },
     {
-      "prompt": "Signage — type?",
-      "answers": ["deterrent", "directive"],
-      "reveal": "deterrent (directive also counts)"
+      "id": "security-policy",
+      "name": "Security policy",
+      "category": "managerial",
+      "type": "directive",
+      "rationale": "Management establishes policy to direct the organization’s required security behavior."
     },
     {
-      "prompt": "Fire suppression — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "aup",
+      "name": "AUP",
+      "display": "Acceptable use policy (AUP)",
+      "category": "managerial",
+      "type": "directive",
+      "rationale": "An AUP is a management document that tells users what use of organizational systems is permitted."
     },
     {
-      "prompt": "Fire suppression — type?",
-      "answers": ["corrective"],
-      "reveal": "corrective"
+      "id": "risk-assessment",
+      "name": "Risk assessment",
+      "category": "managerial",
+      "type": "detective",
+      "rationale": "Management evaluates threats, vulnerabilities, likelihood, and impact to identify existing risk."
     },
     {
-      "prompt": "Faraday cage — category?",
-      "answers": ["physical"],
-      "reveal": "physical"
+      "id": "nda",
+      "name": "NDA",
+      "display": "Nondisclosure agreement (NDA)",
+      "category": "managerial",
+      "type": "directive",
+      "type_alternatives": ["preventive"],
+      "rationale": "An NDA directs signers not to disclose protected information and helps prevent unauthorized disclosure."
     },
     {
-      "prompt": "Faraday cage — type?",
-      "answers": ["preventive"],
-      "reveal": "preventive"
+      "id": "change-management",
+      "name": "Change management",
+      "category": "managerial",
+      "type": "directive",
+      "type_alternatives": ["preventive"],
+      "rationale": "Management defines approval and documentation requirements that direct safe changes and prevent unreviewed ones."
     },
     {
-      "prompt": "Hot site when the primary control is impossible — type?",
-      "answers": ["compensating"],
-      "reveal": "compensating"
+      "id": "cctv",
+      "name": "CCTV",
+      "display": "Closed-circuit television (CCTV) cameras",
+      "category": "physical",
+      "type": "detective",
+      "type_alternatives": ["deterrent"],
+      "rationale": "Cameras physically monitor an area to detect activity and their visibility may deter intruders."
     },
     {
-      "prompt": "technical — category or type?",
-      "answers": ["category"],
-      "reveal": "category"
+      "id": "guards",
+      "name": "Security guards",
+      "category": "physical",
+      "type": "preventive",
+      "type_alternatives": ["detective", "deterrent"],
+      "rationale": "Guards can block physical entry, notice suspicious activity, and visibly discourage attempts."
     },
     {
-      "prompt": "managerial — category or type?",
-      "answers": ["category"],
-      "reveal": "category"
+      "id": "locks",
+      "name": "Locks",
+      "category": "physical",
+      "type": "preventive",
+      "rationale": "Locks physically prevent people without the correct key or credential from entering."
     },
     {
-      "prompt": "operational — category or type?",
-      "answers": ["category"],
-      "reveal": "category"
+      "id": "access-vestibule",
+      "name": "Access control vestibule",
+      "category": "physical",
+      "type": "preventive",
+      "rationale": "The two-door physical space permits one authenticated person at a time and helps prevent tailgating."
     },
     {
-      "prompt": "physical — category or type?",
-      "answers": ["category"],
-      "reveal": "category"
+      "id": "bollards",
+      "name": "Bollards",
+      "category": "physical",
+      "type": "preventive",
+      "rationale": "Bollards physically stop vehicles from reaching protected areas."
     },
     {
-      "prompt": "preventive — category or type?",
-      "answers": ["type"],
-      "reveal": "type"
+      "id": "fence",
+      "name": "Fence",
+      "category": "physical",
+      "type": "deterrent",
+      "type_alternatives": ["preventive"],
+      "rationale": "A fence visibly discourages entry and can physically delay or prevent access."
     },
     {
-      "prompt": "detective — category or type?",
-      "answers": ["type"],
-      "reveal": "type"
+      "id": "lighting",
+      "name": "Security lighting",
+      "category": "physical",
+      "type": "deterrent",
+      "rationale": "Lighting makes intruders more visible and discourages attempts to approach unnoticed."
     },
     {
-      "prompt": "corrective — category or type?",
-      "answers": ["type"],
-      "reveal": "type"
+      "id": "signage",
+      "name": "Security signage",
+      "category": "physical",
+      "type": "deterrent",
+      "type_alternatives": ["directive"],
+      "rationale": "A physical sign can discourage entry and direct people by communicating rules or boundaries."
     },
     {
-      "prompt": "deterrent — category or type?",
-      "answers": ["type"],
-      "reveal": "type"
+      "id": "fire-suppression",
+      "name": "Fire suppression",
+      "category": "physical",
+      "type": "corrective",
+      "rationale": "Physical suppression systems limit damage and correct the dangerous condition after fire begins."
     },
     {
-      "prompt": "compensating — category or type?",
-      "answers": ["type"],
-      "reveal": "type"
+      "id": "faraday-cage",
+      "name": "Faraday cage",
+      "category": "physical",
+      "type": "preventive",
+      "rationale": "A physical conductive enclosure prevents electromagnetic signals from entering or leaving."
     },
     {
-      "prompt": "directive — category or type?",
-      "answers": ["type"],
-      "reveal": "type"
+      "id": "manual-review-fallback",
+      "name": "Manual review used while an automated check is unavailable",
+      "category": "operational",
+      "type": "compensating",
+      "rationale": "A compensating control is an alternate safeguard used when the preferred control cannot be implemented."
     }
   ]
 }
