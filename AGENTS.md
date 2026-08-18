@@ -183,3 +183,15 @@ When discussing build issues, refer to patterns in existing chapter `Makefile`s 
 | "Check my work" / "Did I get this right?" | Confirm strengths; give diagnostic steps to run; ask what they observe before naming the bug |
 | Student shares `scratch/` code  | Treat as advanced/experimental; don't conflate with course level |
 | New chapter completed           | Update **Current Skill Set** per instructions above              |
+
+---
+
+## Cursor Cloud specific instructions
+
+Environment for building/running the C programs (all commands are already documented in `README.md`; this section only captures non-obvious caveats).
+
+- **Compiler must be GCC 14+.** Every `Makefile` uses `CFLAGS = -std=c23`, which Ubuntu's default `gcc` 13 rejects (`unrecognized command-line option '-std=c23'`). The environment install step installs `gcc-14` and points `gcc` at it via `update-alternatives`, so `make` works unmodified. If a build suddenly fails with a `-std=c23` error, confirm `gcc --version` reports 14.x.
+- **Build/run/lint commands** live in `README.md` (Quick Start / Build System Tutorial). In short: `make -C <dir>` builds a directory's `.c` files into `<dir>/build/*.exe`; run with `./<dir>/build/<name>.exe`; lint/format with `clang-format` (config in `.clang-format`). There is no top-level Makefile — build per chapter/`Exercises` directory.
+- **`chapter06/Exercises` `make` fails on `ex9.c`.** `ex9.c` calls `pow()` from `math.h`, but the chapter Makefile does not add `-lm`, so linking fails (`undefined reference to 'pow'`). This is a pre-existing repo/Makefile limitation, not an environment problem. Build that one file manually with `gcc -std=c23 -Wall -Wextra -pedantic -g ex9.c -o build/ex9.exe -lm`. Do not "fix" the Makefile unless the student explicitly asks.
+- **Interactive programs read from stdin** (`scanf`/`getchar`). For non-interactive runs, pipe input, e.g. `echo 100 | ./build/tempInput.exe`. Chapter 7 `getchar()` examples read until EOF — pipe input or send Ctrl-D.
+- Compiled `build/` artifacts are git-ignored (`.gitignore`), so a clean checkout has none — build before running.
