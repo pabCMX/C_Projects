@@ -96,25 +96,25 @@ static const ModelPricing MODEL_PRICING[] = {
                .long_input_cache_read  = 2.00,
                .long_output            = 120.00}},
     {.name  = "gpt-5.6-terra",
-     .rates = {.input_no_cache    = 2.50,
-               .input_cache_write = 3.125,
-               .input_cache_read  = 0.25,
-               .output            = 15.00}},
-    {.name  = "gpt-5.6-terra-fast",
-     .rates = {.input_no_cache    = 5.00,
-               .input_cache_write = 6.25,
-               .input_cache_read  = 0.50,
-               .output            = 30.00}},
-    {.name  = "gpt-5.6-luna",
-     .rates = {.input_no_cache    = 1.00,
-               .input_cache_write = 1.25,
-               .input_cache_read  = 0.10,
-               .output            = 6.00}},
-    {.name  = "gpt-5.6-luna-fast",
      .rates = {.input_no_cache    = 2.00,
                .input_cache_write = 2.50,
                .input_cache_read  = 0.20,
                .output            = 12.00}},
+    {.name  = "gpt-5.6-terra-fast",
+     .rates = {.input_no_cache    = 4.00,
+               .input_cache_write = 5.00,
+               .input_cache_read  = 0.40,
+               .output            = 24.00}},
+    {.name  = "gpt-5.6-luna",
+     .rates = {.input_no_cache    = 0.20,
+               .input_cache_write = 0.25,
+               .input_cache_read  = 0.02,
+               .output            = 1.20}},
+    {.name  = "gpt-5.6-luna-fast",
+     .rates = {.input_no_cache    = 0.40,
+               .input_cache_write = 0.50,
+               .input_cache_read  = 0.04,
+               .output            = 2.40}},
     {.name  = "gpt-5.5",
      .rates = {.input_no_cache         = 3.00,
                .input_cache_write      = 3.00,
@@ -215,12 +215,22 @@ static const ModelPricing MODEL_PRICING[] = {
                .input_cache_write = 12.50,
                .input_cache_read  = 1.00,
                .output            = 50.00}},
-    {.name  = "grok-4-5",
+    {.name  = "cursor-grok-4.6",
+     .rates = {.input_no_cache    = 2.00,
+               .input_cache_write = 2.00,
+               .input_cache_read  = 0.50,
+               .output            = 6.00}},
+    {.name  = "cursor-grok-4-6-fast",
+     .rates = {.input_no_cache    = 4.00,
+               .input_cache_write = 4.00,
+               .input_cache_read  = 1.00,
+               .output            = 12.00}},
+    {.name  = "cursor-grok-4.5",
      .rates = {.input_no_cache    = 2.00,
                .input_cache_write = 2.00,
                .input_cache_read  = 0.5,
                .output            = 6.00}},
-    {.name  = "grok-4-5-fast",
+    {.name  = "cursor-grok-4.5-fast",
      .rates = {.input_no_cache    = 4.00,
                .input_cache_write = 4.00,
                .input_cache_read  = 1.00,
@@ -513,11 +523,10 @@ static void add_usage(UsageTotals *destination, const ModelStats *source) {
 }
 
 // Figures out if a model is a first party one or an API one.
-// Grok is now a first party model set in Cursor.
 static int is_api_model(const char *model_name) {
   if (strcmp(model_name, "auto") == 0)
     return 0;
-  if (strncmp(model_name, "composer", 8) == 0 || strncmp(model_name, "grok", 4))
+  if (strncmp(model_name, "composer", 8) == 0 || strncmp(model_name, "cursor", 6) == 0)
     return 0;
   return 1;
 }
