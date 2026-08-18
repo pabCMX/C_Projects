@@ -13,9 +13,12 @@ One wrapper drives the suite:
 - `test` checks one executable against the standard endpoint subset through `2^34` by default.
   It runs each endpoint 3 times by default, with no warmup or adaptive timing loop.
 - `bench` records comparison data for the full endpoint set through `2^40` unless the two-hour time budget runs out.
+  When a warmup reaches the 10-second single-run threshold, that run is saved as the
+  endpoint's result instead of being discarded and repeated.
 - `capture-sums` writes `baseline/expected-sums.tsv` from a trusted reference executable.
 - `capture-all` benchmarks executable `*.exe` programs already present in `mine/build`
-  and `ai/build`. It does not build programs merely because a matching source file exists.
+  and `ai/build`, using the same warmup-saving behavior as `bench`. It does not build
+  programs merely because a matching source file exists.
   Use `--only PROGRAM_NAME` one or more times to select a smaller set.
 - `latency` measures Python subprocess overhead with repeated `/usr/bin/true` launches.
 

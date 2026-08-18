@@ -308,6 +308,9 @@ def measure_endpoint(
             warmup = run_program(exec_path, endpoint.end, timeout)
             if not warmup.ok:
                 return stats_from_times(times), warmup.stdout, warmup, False
+            if warmup.elapsed >= args.slow_single_threshold:
+                times.append(warmup.elapsed)
+                return stats_from_times(times), warmup.stdout, warmup, True
 
     first = run_program(exec_path, endpoint.end, timeout)
     if not first.ok:
@@ -652,7 +655,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  max exponent:   40\n"
             "  time budget:    7200 seconds per program\n"
             "  runs:           5 normally, adaptive for tiny and slow cases\n"
-            "  warmups:        1 per endpoint\n"
+            "  warmups:        1 per endpoint; warmups at the single-run threshold are saved\n"
             "  latency:        7 /usr/bin/true samples, 1 second apart\n"
             "  output:         appends rows to baseline/program-runs.tsv"
         ),
