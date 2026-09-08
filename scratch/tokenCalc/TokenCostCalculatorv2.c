@@ -44,6 +44,15 @@ typedef struct {
   double cost;
 } UsageTotals;
 
+typedef struct {
+  int kind;
+  int model;
+  int no_cache;
+  int cache_read;
+  int cache_write;
+  int output;
+} ColumnIndices;
+
 static const ModelPricing MODEL_PRICING[] = {
     {.name  = "composer-2.5",
      .rates = {.input_no_cache    = 0.50,
@@ -225,7 +234,7 @@ static const ModelPricing MODEL_PRICING[] = {
                .input_cache_write = 2.00,
                .input_cache_read  = 0.50,
                .output            = 6.00}},
-    {.name  = "cursor-grok-4-6-fast",
+    {.name  = "cursor-grok-4.6-fast",
      .rates = {.input_no_cache    = 4.00,
                .input_cache_write = 4.00,
                .input_cache_read  = 1.00,
@@ -263,9 +272,7 @@ static const Suffixes REASONING_SUFFIXES[] = {{.suffix = "-xhigh"},  {.suffix = 
 
 static const char ERRORED_FIELD[32] = "Errored, No Charge";
 
-static const int FALLBACK_MODEL_INDEX = 26;
-
-#define MAX_MODELS 64
+#define MAX_MODELS 128
 
 static long parse_field_as_long(char *field) {
   return strtol(field, NULL, 10);
@@ -275,7 +282,7 @@ static void format_token_count(long number, char *buf) {
   char tmp[32];
   int  i = 0;
 
-  if (number > 1'000'000) {
+  if (number >= 1'000'000) {
     number = (number + 5000) / 10000; // We're okay with int division here because we want to round.
     while (number > 0) {
       tmp[i++] = (char)('0' + (number % 10));
@@ -290,7 +297,7 @@ static void format_token_count(long number, char *buf) {
     }
     buf[n + 1] = 'M';
     buf[n + 2] = '\0';
-  } else if (number > 1'000) {
+  } else if (number >= 1'000) {
     number = (number + 5) / 10;
     while (number > 0) {
       tmp[i++] = (char)('0' + (number % 10));
@@ -390,22 +397,29 @@ static const ModelPricing *find_pricing(const char *model_name) {
     }
   }
   // If we don't find it, we return the auto pricing.
-  return &MODEL_PRICING[FALLBACK_MODEL_INDEX];
+  for (size_t i = 0; i < model_count; i++) {
+    if (strcmp(MODEL_PRICING[i].name, "auto") == 0) {
+      return &MODEL_PRICING[i];
+    }
+  }
+  // If we don't find auto even, we return NULL.
+  return NULL;
 }
 
-static double calculate_row_cost(char *fields[], const ModelPricing *pricing) {
-  // First check the model pricing table size and init cost variable.
-  long       no_cache    = parse_field_as_long(fields[7]);
-  long       cache_read  = parse_field_as_long(fields[8]);
-  long       cache_write = parse_field_as_long(fields[6]);
-  long       output      = parse_field_as_long(fields[9]);
+static double calculate_row_cost(char *fields[], const ModelPricing *pricing,
+                                 ColumnIndices column_indices) {
+  // We first parse the fields into longs.
+  long       no_cache    = parse_field_as_long(fields[column_indices.no_cache]);
+  long       cache_read  = parse_field_as_long(fields[column_indices.cache_read]);
+  long       cache_write = parse_field_as_long(fields[column_indices.cache_write]);
+  long       output      = parse_field_as_long(fields[column_indices.output]);
   const long Mil         = 1'000'000;
   double     cost        = 0.0;
 
-  // If we find it we check if we're over the long context threshold.
+  // We check if there is a long context threshold, and if so, whether we're over it.
   if (pricing->rates.long_context_threshold > 0.0 &&
       no_cache + cache_read + cache_write >= pricing->rates.long_context_threshold) {
-    // if so we use the long costs.
+    // If we are over the threshold, we use the long costs.
     cost += (no_cache * pricing->rates.long_input_no_cache) / Mil;
     cost += (cache_read * pricing->rates.long_input_cache_read) / Mil;
     cost += (cache_write * pricing->rates.long_input_cache_write) / Mil;
@@ -419,13 +433,14 @@ static double calculate_row_cost(char *fields[], const ModelPricing *pricing) {
   }
 }
 
-static int accumulate_stats_from_row(ModelStats *stats, char *fields[], int *stats_count) {
+static int accumulate_stats_from_row(ModelStats *stats, char *fields[], int *stats_count,
+                                     ColumnIndices column_indices) {
   // We create a found index to set data.
   int found = -1;
 
   // First check if we have the model name already in our list.
   for (int i = 0; i < *stats_count; i++) {
-    if (strcmp(stats[i].name, fields[4]) == 0) {
+    if (strcmp(stats[i].name, fields[column_indices.model]) == 0) {
       // If a model name matches, we set the found index to the current stat index.
       found = i;
       // Then exit the stats checking loop.
@@ -433,29 +448,33 @@ static int accumulate_stats_from_row(ModelStats *stats, char *fields[], int *sta
     }
   }
 
-  // If not, add it
-  if (found == -1) {
+  // If not, add it only if we're not already at the max stats count.
+  if (found == -1 && *stats_count < MAX_MODELS) {
     // We'll set found to the current stats max index.
     found = *stats_count;
     // Then update the max stats index.
     (*stats_count)++;
     // We copy the name directly from the field into the stats (making space for the final char).
-    strncpy(stats[found].name, fields[4], sizeof(stats[found].name) - 1);
+    strncpy(stats[found].name, fields[column_indices.model], sizeof(stats[found].name) - 1);
     // Then we add a null terminator.
     stats[found].name[sizeof(stats[found].name) - 1] = '\0';
+  } else if (found == -1) {
+    // If we didn't find a model name and we're at the max stats count, we return 1 to indicate an
+    // error.
+    printf("Error: Max stats count reached, exiting...: %s\n", fields[column_indices.model]);
+    return 1;
   }
-
   // Now we accumulate each of the model's statistics based on the current fields into the stats
   // struct totals.
   stats[found].events++;
-  stats[found].no_cache += parse_field_as_long(fields[7]);
-  stats[found].cache_read += parse_field_as_long(fields[8]);
-  stats[found].cache_write += parse_field_as_long(fields[6]);
-  stats[found].output += parse_field_as_long(fields[9]);
+  stats[found].no_cache += parse_field_as_long(fields[column_indices.no_cache]);
+  stats[found].cache_read += parse_field_as_long(fields[column_indices.cache_read]);
+  stats[found].cache_write += parse_field_as_long(fields[column_indices.cache_write]);
+  stats[found].output += parse_field_as_long(fields[column_indices.output]);
   // Before we calculate cost, we need to find the model's pricing rates, and give them to the
   // cost calc.
-  const ModelPricing *pricing = find_pricing(fields[4]);
-  stats[found].cost += calculate_row_cost(fields, pricing);
+  const ModelPricing *pricing = find_pricing(fields[column_indices.model]);
+  stats[found].cost += calculate_row_cost(fields, pricing, column_indices);
 
   return 0;
 }
@@ -504,6 +523,51 @@ static int split_csv_line(char *line, char *fields[], int max_fields) {
   }
 
   return count;
+}
+
+static void set_max_field_index(int *max_field_index, int index) {
+  if (index > *max_field_index) {
+    *max_field_index = index;
+  }
+}
+
+/** Iterates through the header fields and sets the column indices. */
+static int parse_header(char *header, char *fields[], ColumnIndices *column_indices,
+                        int *max_field_index) {
+  // First we split the header into fields, and save the count of found fields.
+  int found_fields = split_csv_line(header, fields, 32);
+  // Then we iterate through the fields and set the column indices.
+  for (int i = 0; i < found_fields; i++) {
+    // If we find the column substring, we set the column index.
+    if (strstr(fields[i], "Kind") != NULL) {
+      column_indices->kind = i;
+      set_max_field_index(max_field_index, i);
+    } else if (strstr(fields[i], "Model") != NULL) {
+      column_indices->model = i;
+      set_max_field_index(max_field_index, i);
+    } else if (strstr(fields[i], "w/o Cache") != NULL) {
+      column_indices->no_cache = i;
+      set_max_field_index(max_field_index, i);
+    } else if (strstr(fields[i], "Cache Read") != NULL) {
+      column_indices->cache_read = i;
+      set_max_field_index(max_field_index, i);
+    } else if (strstr(fields[i], "w/ Cache") != NULL) {
+      column_indices->cache_write = i;
+      set_max_field_index(max_field_index, i);
+    } else if (strstr(fields[i], "Output") != NULL) {
+      column_indices->output = i;
+      set_max_field_index(max_field_index, i);
+    }
+  }
+  // If we didn't find all the columns, we return an error.
+  if (column_indices->kind == -1 || column_indices->model == -1 || column_indices->no_cache == -1 ||
+      column_indices->cache_read == -1 || column_indices->cache_write == -1 ||
+      column_indices->output == -1) {
+    // Failure to find all the columns means we can't continue.
+    return 1;
+  }
+  // If we found all the columns, we return success.
+  return 0;
 }
 
 static int compare_stats_by_cost(const void *left, const void *right) {
@@ -571,12 +635,22 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  char      *path = argv[1];
-  char       line[8192];
-  char      *fields[32];
-  int        field_count       = 0;
-  ModelStats stats[MAX_MODELS] = {0};
-  int        stats_count       = 0;
+  char         *path = argv[1];
+  char          header[8192];
+  char          line[8192];
+  char         *fields[32];
+  int           field_count       = 0;
+  ModelStats    stats[MAX_MODELS] = {0};
+  int           stats_count       = 0;
+  ColumnIndices column_indices    = {
+         .kind        = -1,
+         .model       = -1,
+         .no_cache    = -1,
+         .cache_read  = -1,
+         .cache_write = -1,
+         .output      = -1,
+  };
+  int max_field_index = -1;
 
   // We init the totals with a name, but can't directly set the name.
   UsageTotals api_totals = {0};
@@ -603,27 +677,36 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  if (fgets(line, sizeof(line), input) == NULL) {
+  if (fgets(header, sizeof(header), input) == NULL) {
     printf("File was empty\n");
+    fclose(input);
+    return 1;
+  } else if (parse_header(header, fields, &column_indices, &max_field_index) == 1) {
+    printf("Error parsing header, exiting...\n");
+    fclose(input);
     return 1;
   }
 
   while (fgets(line, sizeof(line), input) != NULL) {
     field_count = split_csv_line(line, fields, 32);
-    if (field_count != 12) {
-      printf("Error reading line, bad field number:");
-      printf("%s", line);
-      continue;
+    // We check if the field count is greater than or equal to the max field index in case we're
+    // missing necessary fields.
+    if (field_count > max_field_index) {
+      // First check if the kind field is errored.
+      if (strcmp(fields[column_indices.kind], ERRORED_FIELD) == 0) {
+        // If so, skip.
+        continue;
+      }
+      // We start with the stats struct, all the current fields, and a pointer to the total stats
+      // index
+      if (accumulate_stats_from_row(stats, fields, &stats_count, column_indices) == 1) {
+        printf("Error adding stats for model: %s\n", fields[column_indices.model]);
+        fclose(input);
+        return 1;
+      }
     }
-    // First check if field[3] is errored or not.
-    if (strcmp(fields[3], ERRORED_FIELD) == 0) {
-      // Just skip it.
-      continue;
-    }
-    // We start with the stats struct, all the current fields, and a pointer to the total stats
-    // index
-    accumulate_stats_from_row(stats, fields, &stats_count);
   }
+
   fclose(input);
 
   // Now we sort the stats by cost.
